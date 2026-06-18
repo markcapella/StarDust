@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+# Color styling.
+TEXT_BOLD=$(tput bold)
+
+COLOR_BLACK=$(tput setaf 0)
+COLOR_RED=$(tput setaf 1)
+COLOR_GREEN=$(tput setaf 2)
+COLOR_YELLOW=$(tput setaf 3)
+COLOR_BLUE=$(tput setaf 4)
+COLOR_MAGENTA=$(tput setaf 5)
+COLOR_CYAN=$(tput setaf 6)
+COLOR_WHITE=$(tput setaf 7)
+
+ALLTEXT_NORMAL=$(tput sgr0)
+
+
+# Sanity check the request.
+APP_NAME=$1
+if [ "$APP_NAME" == "" ]; then
+    echo -e "$COLOR_RED""$TEXT_BOLD""!! Error,"\
+        "$ALLTEXT_NORMAL""No App name specified to be halted."
+    exit 1
+fi
+
+# Kill all active $APP_NAME.
+WERE_ANY_HALTED="false"
+
+OLDIFS=$IFS; IFS=$'\n';
+for PROC_INFO in $(wmctrl -l | egrep "$APP_NAME")
+do
+    # pppppppppp            nnnnnnnnnnn 
+    # 0x03400007  0 lubuntu $APP_NAME
+    PROC_ID=${PROC_INFO:0:10}
+    PROC_NAME=${PROC_INFO:22:11}
+
+    if [[ "$PROC_ID" != "" && "$PROC_NAME" == "$APP_NAME" ]]; then
+        echo -e "$COLOR_YELLOW""$TEXT_BOLD""-- Warning,"\
+            "$ALLTEXT_NORMAL""Active x11 resource ""$APP_NAME"\
+            "is being shutdown."
+        xkill -id ""$PROC_ID"" 1>/dev/null 2>/dev/null
+        WERE_ANY_HALTED="true"
+    fi
+done
+IFS=$OLDIFS
+
+if [ "$WERE_ANY_HALTED" != "true" ]; then
+    echo "-- No Active x11 resource ""$APP_NAME"" to shutdown."
+fi
+
+APPS_TO_KILL=$(pgrep $APP_NAME 1>/dev/null 2>/dev/null; echo $?)
+if [ "$APPS_TO_KILL" == "1" ]; then
+    echo "-- No Active proc ""$APP_NAME"" to shutdown."
+else
+    echo -e "$COLOR_YELLOW""$TEXT_BOLD""-- Warning,"\
+        "$ALLTEXT_NORMAL""Active proc ""$APP_NAME"\
+        "is being shutdown."
+    pkill $APP_NAME
+fi

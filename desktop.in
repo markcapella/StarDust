@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+
+Name=@PROJECT_NAME@
+Comment=@PROJECT_DESC@
+
+Exec=@PROJECT_NAME@
+Icon=@PROJECT_NAME@
+Categories=Game;
+
+Terminal=false
