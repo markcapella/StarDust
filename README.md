@@ -30,12 +30,12 @@
     widget to reveal the Pin or Close button.
     
     
+!['screenshotBefore2'](https://github.com/markcapella/StarDust/blob/main/screenshot2Before.png)
+!['screenshotAfter2'](https://github.com/markcapella/StarDust/blob/main/screenshot2After.png)
+    
+
 !['screenshotBefore'](https://github.com/markcapella/StarDust/blob/main/screenshotBefore.png)
 !['screenshotAfter'](https://github.com/markcapella/StarDust/blob/main/screenshotAfter.png)
-
-    
-!['screenshotBefore2'](https://github.com/markcapella/StarDust/blob/main/screenshotBefore2.png)
-!['screenshotAfter2'](https://github.com/markcapella/StarDust/blob/main/screenshotAfter2.png)
 
     
 ## Installation.
