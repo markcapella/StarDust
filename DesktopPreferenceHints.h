@@ -4,10 +4,10 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-struct DesktopPreferenceFilter : public QObject {
+struct DesktopPreferenceHints : public QObject {
     QSlider* s;
 
-    DesktopPreferenceFilter(QSlider* slider) :
+    DesktopPreferenceHints(QSlider* slider) :
         QObject(slider), s(slider) {}
 
     bool eventFilter(QObject* o, QEvent* e) override {

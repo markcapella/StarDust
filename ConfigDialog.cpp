@@ -326,7 +326,7 @@ ConfigDialog::createConfigDialogControls() {
                         sliderEditWidget);
                 });
                 sliderEditWidget->installEventFilter(
-                    new DesktopPreferenceFilter(sliderEditWidget));
+                    new DesktopPreferenceHints(sliderEditWidget));
                 continue;
             }
 

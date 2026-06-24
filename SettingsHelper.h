@@ -36,8 +36,7 @@ class SettingsHelper {
         static inline const QString ON_TOP_INSTEAD =
             "04 Stick to Top";
 
-        static inline const QString DIVIDER_1 =
-            "05";
+        static inline const QString DIVIDER_1 = "05";
 
         static inline const QString BACKGROUND_COLOR =
             "06 Background Color";
@@ -49,8 +48,7 @@ class SettingsHelper {
         static inline const QString STAR_SATURATION =
             "09 Starfield Saturation";
 
-        static inline const QString DIVIDER_2 =
-            "10";
+        static inline const QString DIVIDER_2 = "10";
 
         static inline const QString SIZE_CHANGE_DELAY =
             "11 Size Change Delay";
@@ -59,8 +57,7 @@ class SettingsHelper {
         static inline const QString COLOR_CHANGE_DELAY =
             "13 Color Change Delay";
 
-        static inline const QString DIVIDER_3 =
-            "14";
+        static inline const QString DIVIDER_3 = "14";
 
         static inline const QString STAR_COLOR_COOL =
             "15 Star Color Cool";
@@ -72,7 +69,6 @@ class SettingsHelper {
             "18 Star Color Hot";
 
         // Volatile.
-
         static inline const QString CONFIG_MODE = "In Config mode";
 
         // Settings property struct.
@@ -117,7 +113,7 @@ class SettingsHelper {
             },
 
             { .group = GROUP_CONFIGURABLE, .name = DIVIDER_1,
-              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "10",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
@@ -193,6 +189,7 @@ class SettingsHelper {
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
+
             // Volatile internals, hidden from ConfigDialog.
             { .group = GROUP_VOLATILE, .name = CONFIG_MODE,
               .valueType = BOOL_VALUETYPE, .initialValue = "true",
