@@ -537,12 +537,12 @@ XHelper::getWindowFrameOffset(const Window window) {
     unsigned long nItems, unusedBytes;
     unsigned char* properties = nullptr;
 
-    const int RESULT = XGetWindowProperty(mDisplay, window,
+    const int CALL_RESULT = XGetWindowProperty(mDisplay, window,
         XInternAtom(mDisplay, "_NET_FRAME_EXTENTS", False),
         0, 4, False, XA_CARDINAL, &type, &format, &nItems,
         &unusedBytes, &properties);
 
-    if (RESULT == Success &&
+    if (CALL_RESULT == Success &&
         properties != nullptr && nItems == 4) {
         const long* DATA = reinterpret_cast<long*> (properties);
         const QSize RESULT(DATA[0], DATA[2]);

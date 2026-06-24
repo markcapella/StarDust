@@ -109,7 +109,7 @@ SettingsHelper::getCanvasWidth() {
 }
 double
 SettingsHelper::getCanvasHeight() {
-    return getQSettings()->value("canvasHeight", 200).toDouble();
+    return getQSettings()->value("canvasHeight", 600).toDouble();
 }
 
 /**

@@ -23,28 +23,16 @@ StickyWindow::StickyWindow() {
 
     // Create control buttons.
     createAllWindowButtons();
+    setControlButtonsVisibility();
 
-    // Create autohide timer for control buttons.
+    // Create autohide timer for control buttons,
+    // then set control buttons visibility.
     mAutoHideControlsTimer = make_unique<QTimer>();
     mAutoHideControlsTimer->setSingleShot(true);
-    QObject::connect(mAutoHideControlsTimer.get(),
-        &QTimer::timeout, [this] () {
+    QObject::connect(mAutoHideControlsTimer.get(), &QTimer::timeout,
+        [this] () {
         setConfigModeOff();
     });
-
-    // Create draw() coalescer to avoid screen jank.
-    // Avoid drawing faster than user can see.
-    //mCanvasDrawCoalescer = make_unique<QTimer>();
-    //mCanvasDrawCoalescer->setSingleShot(true);
-    //QObject::connect(mCanvasDrawCoalescer.get(),
-    //    &QTimer::timeout, [this] () {
-    //    mCanvas->setCanvasVisibile();
-    //    mCanvas->drawCanvas();
-    //    drawAllWindowButtons();
-    //});
-
-    // Set control buttons visibility.
-    setControlButtonsVisibility();
 
     // Define any X11 message Atoms.
     mDeleteMessage = XInternAtom(mDisplay,
@@ -128,12 +116,6 @@ StickyWindow::draw() {
     XRenderFreePicture(mDisplay, renderPic);
     XFlush(mDisplay);
 
-    // Draws must delay @least 20 ms. between.
-    //if (!mCanvasDrawCoalescer->isActive()) {
-      //  const chrono::milliseconds DELAY(20); // ms.
-        //mCanvasDrawCoalescer->start(DELAY);
-        //return;
-    //}
     mCanvas->setCanvasVisibile();
     mCanvas->drawCanvas();
     drawAllWindowButtons();
@@ -207,6 +189,7 @@ StickyWindow::run() {
     while (true) {
         // Process xEvents, close when requested.
         if (handleX11EventQueue()) {
+            mCanvas->uninitCanvas();
             break;
         }
 
@@ -219,26 +202,6 @@ StickyWindow::run() {
 
         // Support ConfigDialog loop.
         QCoreApplication::processEvents();
-    }
-}
-
-/**
- * Ensure window opens on valid remembered desktop.
- */
-void
-StickyWindow::rangeCheckPreferredDesktopSetting() {
-    const int PREFERRED_DESKTOP = mSettingsHelper->
-        getIntSetting(SettingsHelper::PREFERRED_DESKTOP);
-    if (PREFERRED_DESKTOP == -1) {
-        return;
-    }
-
-    const int BOUNDED_PREFERRED_DESKTOP = PREFERRED_DESKTOP + 1;
-    const int MAX_OS_DESKTOPS = mXHelper->getMaximumDesktops();
-
-    if (BOUNDED_PREFERRED_DESKTOP > MAX_OS_DESKTOPS) {
-        mSettingsHelper->setIntSetting(
-            SettingsHelper::PREFERRED_DESKTOP, -1);
     }
 }
 
@@ -344,7 +307,8 @@ StickyWindow::createX11Window() {
         mWindowTitle, None, nullptr, 0, nullptr);
     free(mWindowTitle);
 
-    // Ensure we're placed on all desktops.
+    // Ensure we're placed on all desktops. We appear to be
+    // "on" or "off" a desktop through logical show/hides.
     mXHelper->setWindowDesktop(mX11Window, -1);
 
     // Ensure window opens on valid remembered desktop.
@@ -356,10 +320,10 @@ StickyWindow::createX11Window() {
 
     // On first time run, ensure window appears ontop
     // like a splash screen. Else, ensure stick state.
-    setWindowStickPosition();
     if (INITIAL_RUN) {
         XRaiseWindow(mDisplay, mX11Window);
     } else {
+        setWindowStickPosition();
     }
 
     // Apply strict configuration to the window. Awesome WM
@@ -754,15 +718,16 @@ StickyWindow::handleX11EventQueue() {
         XNextEvent(mDisplay, &event);
         switch (event.type) {
 
-            // Detect mRootWindow window or desktop property changes.
+            // Detect root window or desktop property changes.
             case PropertyNotify:
-                if (event.xproperty.window ==
-                    DefaultRootWindow(mDisplay)) {
+                // For root window changes.
+                if (event.xproperty.window == DefaultRootWindow(mDisplay)) {
                     // MAXIMUM DESKTOPS parm change.
                     if (event.xproperty.atom == XInternAtom(mDisplay,
                         "_NET_NUMBER_OF_DESKTOPS", False)) {
                         rangeCheckPreferredDesktopSetting();
-                        updateActiveConfigButtonDialog();
+                        updateActiveConfigDialog();
+                        draw();
                         break;
                     }
                     // VISIBLE DESKTOP change.
@@ -773,24 +738,24 @@ StickyWindow::handleX11EventQueue() {
                     }
                     break;
                 }
-                onPropertyNotify(event.xproperty);
                 break;
 
             // ClientMsg says window close.
             case ClientMessage:
+                // Our window wants close.
                 if (static_cast<Atom>(event.xclient.data.l[0]) ==
                     mDeleteMessage) {
                     return true;
                 }
-
-                if (event.xclient.message_type ==
-                    mConfigDialogUpdated) {
+                // Our window needs updating with Config changes.
+                if (event.xclient.message_type == mConfigDialogUpdated) {
                     receiveConfigDialogUpdatedEvent();
                 }
                 break;
 
             // Type = Expose.
             case Expose:
+                draw();
                 break;
 
             // Type = UnmapNotify.
@@ -807,8 +772,7 @@ StickyWindow::handleX11EventQueue() {
             case ConfigureNotify:
                 XTranslateCoordinates(mDisplay, event.xconfigure.window,
                     RootWindow(mDisplay, DefaultScreen(mDisplay)), 0, 0,
-                        &mTranslatePosX, &mTranslatePosY,
-                            &mTranslateWindow);
+                    &mTranslatePosX, &mTranslatePosY, &mTranslateWindow);
                 resize(mTranslatePosX, mTranslatePosY,
                     event.xconfigure.width, event.xconfigure.height);
                 break;
@@ -892,11 +856,32 @@ StickyWindow::handleX11EventQueue() {
 }
 
 /**
+ * Ensure window opens on valid remembered desktop.
+ */
+void
+StickyWindow::rangeCheckPreferredDesktopSetting() {
+    // If we have no preferred desktop, no changes.
+    const int PREFERRED_DESKTOP = mSettingsHelper->
+        getIntSetting(SettingsHelper::PREFERRED_DESKTOP);
+    if (PREFERRED_DESKTOP == -1) {
+        return;
+    }
+
+    // If preferred desktop no longer exists, set preferred to all.
+    const int BOUNDED_PREFERRED_DESKTOP = PREFERRED_DESKTOP + 1;
+    const int MAX_OS_DESKTOPS = mXHelper->getMaximumDesktops();
+    if (BOUNDED_PREFERRED_DESKTOP > MAX_OS_DESKTOPS) {
+        mSettingsHelper->setIntSetting(
+            SettingsHelper::PREFERRED_DESKTOP, -1);
+    }
+}
+
+/**
  * Update the Config Dialog if it's active &
  * the UI needs updating.
  */
 void
-StickyWindow::updateActiveConfigButtonDialog() {
+StickyWindow::updateActiveConfigDialog() {
     lock_guard<recursive_mutex> lock(mButtonsMutLock);
 
     const int BUTTONS_COUNT = mButtons.size();
@@ -929,7 +914,7 @@ StickyWindow::receiveConfigDialogUpdatedEvent() {
 void
 StickyWindow::cursorWatcherThread() {
     // Find the cursor location.
-    Window mRootWindow = None;
+    Window rootWindow = None;
     int rootX = -1;
     int rootY = -1;
 
@@ -937,7 +922,7 @@ StickyWindow::cursorWatcherThread() {
     int winX = -1;
     int winY = -1;
 
-    if (!XQueryPointer(mDisplay, mX11Window, &mRootWindow, &window,
+    if (!XQueryPointer(mDisplay, mX11Window, &rootWindow, &window,
         &rootX, &rootY, &winX, &winY, &mClickStatus)) {
         cout << XCOLOR_YELLOW << "Failed to query Cursor location." <<
             XCOLOR_NORMAL << endl;
@@ -975,20 +960,17 @@ StickyWindow::dragWindowToPoint(const QPoint position) {
 
     const bool ALLOW_DRAG_THRU_DESKTOPS = mSettingsHelper->
         getBoolSetting(SettingsHelper::ALLOW_DESKTOP_DRAG);
-
     const int VISIBLE_DESKTOP = mXHelper->getVisibleDesktop();
-
     const bool HAS_DESKTOP_PREFERENCE = mSettingsHelper->
         getIntSetting(SettingsHelper::PREFERRED_DESKTOP) != -1;
-
     const int SCREEN_WIDTH = WidthOfScreen(
         DefaultScreenOfDisplay(mDisplay));
-
     const int KICK_DISTANCE = 2;
 
+    // Create updatable position.
     QPoint dragPosition = position;
 
-    // Check for drag left thru desktops.
+    // Check for drag left thru desktops, update position.
     if ((dragPosition.x() <= 0) && ALLOW_DRAG_THRU_DESKTOPS) {
         int desktop = VISIBLE_DESKTOP - 1;
         if (desktop < 0) {
@@ -1001,13 +983,16 @@ StickyWindow::dragWindowToPoint(const QPoint position) {
                 PREFERRED_DESKTOP, desktop);
         }
 
-        dragPosition.setX(SCREEN_WIDTH - KICK_DISTANCE);
         mXHelper->setVisibleDesktop(desktop);
+        updateActiveConfigDialog();
+
+        dragPosition.setX(SCREEN_WIDTH - KICK_DISTANCE);
         XWarpPointer(mDisplay, None, DefaultRootWindow(mDisplay),
             0, 0, 0, 0, dragPosition.x(), dragPosition.y());
+
     }
 
-    // Check for drag right thru desktops.
+    // Check for drag right thru desktops, update position.
     if ((dragPosition.x() >= SCREEN_WIDTH - 1) &&
         ALLOW_DRAG_THRU_DESKTOPS) {
         int desktop = VISIBLE_DESKTOP + 1;
@@ -1021,8 +1006,10 @@ StickyWindow::dragWindowToPoint(const QPoint position) {
                 SettingsHelper::PREFERRED_DESKTOP, desktop);
         }
 
-        dragPosition.setX(KICK_DISTANCE);
         mXHelper->setVisibleDesktop(desktop);
+        updateActiveConfigDialog();
+
+        dragPosition.setX(KICK_DISTANCE);
         XWarpPointer(mDisplay, None, DefaultRootWindow(mDisplay),
             0, 0, 0, 0, dragPosition.x(), dragPosition.y());
     }
@@ -1032,6 +1019,7 @@ StickyWindow::dragWindowToPoint(const QPoint position) {
         mDragMoveButtonOffset.x());
     mSettingsHelper->setWindowYPos(dragPosition.y() -
         mDragMoveButtonOffset.y());
+
     XMoveWindow(mDisplay, mX11Window, mSettingsHelper->
         getWindowXPos(), mSettingsHelper->getWindowYPos());
 }
@@ -1101,37 +1089,4 @@ StickyWindow::resizeWindowToPoint(const QPoint position) {
 
     // Re-draw all & done.
     draw();
-}
-
-/**
- * This method updates any visible ConfigDialog on drag
- * thru desktop changing "Preferred Desktop" slider value.
- */
-void
-StickyWindow::onPropertyNotify(const XPropertyEvent& event) {
-    // Only respond to desktop changes.
-    if (!event.display || !event.atom) {
-        return;
-    }
-    char* atomName = XGetAtomName(event.display, event.atom);
-    if (!atomName || string(atomName) != "_NET_WM_DESKTOP") {
-        XFree(atomName);
-        return;
-    }
-    XFree(atomName);
-
-    // Respond to ConfigDialog control updates required when
-    // preferred desktop changes as user drags across desktops.
-    if (!mIsMouseClicked) {
-        return;
-    }
-
-    const int VISIBLE_DESKTOP = mXHelper->getVisibleDesktop();
-    if (VISIBLE_DESKTOP == mPreviousDesktop) {
-        return;
-    }
-    mPreviousDesktop = VISIBLE_DESKTOP;
-
-    // Payload.
-    updateActiveConfigButtonDialog();
 }

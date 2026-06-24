@@ -14,8 +14,8 @@ set(APP_NAME "StarDust")
 set(APP_DESC "A colorful deep star field that twinkles and")
 set(APP_DESC "${APP_DESC} slowly changes on your desktop.")
 
-set(APP_VERSION "26.06.17")
-set(APP_VERSION_MINOR "00")
+set(APP_VERSION "26.06.23")
+set(APP_VERSION_MINOR "01")
 
 set(APP_AUTHOR "Mark James Capella")
 set(ORG_NAME "skyrmion.inc")
@@ -114,28 +114,11 @@ set(WIDGET_PROJECT ${APP_NAME})
 
 # All input sources.
 set(WIDGET_SOURCES
-    Star.cpp
-    Canvas.cpp
-
-    PinButton.cpp
-    QuitButton.cpp
-    MoveButton.cpp
-    SizeButton.cpp
-
-    ConfigDialog.cpp
-    ColorButton.cpp
-    AboutDialog.cpp
-    ConfigButton.cpp
-
-    StickyWindow.cpp
-
-    SettingsHelper.cpp
-    RecentsHelper.cpp
-    DisplayHelper.cpp
-
-    XHelper.cpp
-
-    StickyWidgetIII.cpp
+    Star.cpp Canvas.cpp
+    PinButton.cpp QuitButton.cpp MoveButton.cpp SizeButton.cpp
+    ConfigDialog.cpp ColorButton.cpp AboutDialog.cpp ConfigButton.cpp
+    SettingsHelper.cpp RecentsHelper.cpp DisplayHelper.cpp XHelper.cpp
+    StickyWindow.cpp StickyWidgetIII.cpp
 )
 
 # Final executable.
@@ -183,13 +166,13 @@ target_link_libraries(${WIDGET_PROJECT} PRIVATE
 #
 # Debug #1.
 #target_compile_options(${WIDGET_PROJECT} PRIVATE
-#    -O1 -Wall -Wextra -Wuninitialized -Wmaybe-uninitialized)
+#    -g -O1 -Wall -Wextra -Wuninitialized -Wmaybe-uninitialized)
 #
 # Debug #2.
-target_compile_options(${WIDGET_PROJECT} PUBLIC
-    -fsanitize=address -fno-omit-frame-pointer)
-target_link_options(${WIDGET_PROJECT} PUBLIC
-    -fsanitize=address)
+#target_compile_options(${WIDGET_PROJECT} PUBLIC
+#    -g -O1 -fsanitize=address -fno-omit-frame-pointer)
+#target_link_options(${WIDGET_PROJECT} PUBLIC
+#    -fsanitize=address)
 
 ##
 # Prevent sudo make install before make.

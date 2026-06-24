@@ -110,7 +110,7 @@ main(int argc, char** argv) {
 
     initAppPngImages();
 
-    StickyWindow* mStickyWindow = new StickyWindow();
+    mStickyWindow = new StickyWindow();
     if (mStickyWindow->getX11Window() != None) {
         mStickyWindow->run();
     }

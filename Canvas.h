@@ -8,6 +8,7 @@ class Canvas {
 
     public:
         Canvas(const Window window);
+        ~Canvas();
 
         /**
          * Init for the widget canvas.

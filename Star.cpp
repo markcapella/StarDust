@@ -4,7 +4,9 @@
 /**
  * Star(s) are the main objects in the view.
  */
-Star::Star(const Window window) {
+Star::Star(const Window window, QObject* parent) :
+    QObject(parent) {
+
     mWindow = window;
 
     // After setting initial size, we can randomize
@@ -158,32 +160,29 @@ Star::erase() {
  */
 void
 Star::createAndStartChangeTimers() {
-    // Create change timers for size.
-    mSizeChangeTimer = make_unique<QTimer>();
+    // Create & start Size Change timer.
+    mSizeChangeTimer = new QTimer(this);
     mSizeChangeTimer->setInterval(100);
-    QObject::connect(mSizeChangeTimer.get(), &QTimer::timeout,
-        [this] () { changeSize(); });
-    QTimer::singleShot(randomIntegerUpTo(500), [this]() {
-        mSizeChangeTimer->start();
-    });
+    connect(mSizeChangeTimer, &QTimer::timeout, this, [this]() {
+        changeSize(); });
+    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
+        mSizeChangeTimer->start(); });
 
-    // Create change timer for position.
-    mPositionChangeTimer = make_unique<QTimer>();
+    // Create & start Position Change timer.
+    mPositionChangeTimer = new QTimer(this);
     mPositionChangeTimer->setInterval(100);
-    QObject::connect(mPositionChangeTimer.get(), &QTimer::timeout,
-        [this] () { changePosition(); });
-    QTimer::singleShot(randomIntegerUpTo(500), [this]() {
-        mPositionChangeTimer->start();
-    });
+    connect(mPositionChangeTimer, &QTimer::timeout, this, [this]() {
+       changePosition(); });
+    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
+        mPositionChangeTimer->start(); });
 
-    // Create change timer for color.
-    mColorChangeTimer = make_unique<QTimer>();
+    // Create & start Color Change timer.
+    mColorChangeTimer = new QTimer(this);
     mColorChangeTimer->setInterval(100);
-    QObject::connect(mColorChangeTimer.get(), &QTimer::timeout,
-        [this] () { changeColor(); });
-    QTimer::singleShot(randomIntegerUpTo(500), [this]() {
-        mColorChangeTimer->start();
-    });
+    connect(mColorChangeTimer, &QTimer::timeout, this, [this]() {
+        changeColor(); });
+    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
+        mColorChangeTimer->start(); });
 }
 
 /**
@@ -204,6 +203,10 @@ Star::stopChangeTimers() {
     mSizeChangeTimer->stop();
     mPositionChangeTimer->stop();
     mColorChangeTimer->stop();
+
+    delete mSizeChangeTimer;
+    delete mPositionChangeTimer;
+    delete mColorChangeTimer;
 }
 
 /**
@@ -223,8 +226,6 @@ Star::changeSize() {
     if (mCanvas->isCanvasVisible()) {
         randomizeSize();
         draw();
-        //setNeedsDrawAfterChange(true);
-        //mCanvas->setNeedsDrawAfterStarChange(true);
     }
 }
 
@@ -245,8 +246,6 @@ Star::changePosition() {
     if (mCanvas->isCanvasVisible()) {
         randomizePosition();
         draw();
-        //setNeedsDrawAfterChange(true);
-        //mCanvas->setNeedsDrawAfterStarChange(true);
     }
 }
 
@@ -267,7 +266,5 @@ Star::changeColor() {
     if (mCanvas->isCanvasVisible()) {
         randomizeColor();
         draw();
-        //setNeedsDrawAfterChange(true);
-        //mCanvas->setNeedsDrawAfterStarChange(true);
     }
 }

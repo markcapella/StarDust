@@ -1,17 +1,21 @@
 
 #pragma once
 
+#include <X11/extensions/Xrender.h>
+
 /**
  * Star(s) are the main objects in the view.
  */
-class Star {
+class Star : public QObject {
+    Q_OBJECT
 
     public:
         // Defined in SettingsHelper.
         static inline const int AVAILABLE_STAR_COLORS = 4;
 
         // Constructor.
-        Star(const Window window);
+        explicit Star(const Window window, QObject* parent = nullptr);
+        ~Star() override = default;
 
         /**
          * Getters & setters for class atrributes.
@@ -119,8 +123,7 @@ class Star {
         QPoint mPosition{};
 
         // Attribute change timers.
-        unique_ptr<QTimer> mSizeChangeTimer{nullptr};
-        unique_ptr<QTimer> mPositionChangeTimer{nullptr};
-        unique_ptr<QTimer> mColorChangeTimer{nullptr};
-
+        QTimer* mSizeChangeTimer = nullptr;
+        QTimer* mPositionChangeTimer = nullptr;
+        QTimer* mColorChangeTimer = nullptr;
 };

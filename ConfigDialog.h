@@ -17,8 +17,11 @@ class ConfigDialog : public QDialog {
     Q_OBJECT
 
     public:
-        static inline const long CONFIG_DIALOG_WIDTH = 450;
-        static inline const long CONFIG_DIALOG_HEIGHT = 600;
+        static inline const int CONFIG_DIALOG_WIDTH = 450;
+        static inline const int CONFIG_DIALOG_HEIGHT = 600;
+
+        static inline const int FORM_TOP_BOTTOM_SPACING = 15;
+        static inline const int FORM_LAYOUT_ROW_SPACING = 8;
 
         static inline const QString ABOUT_STRING = "About";
 
@@ -28,7 +31,7 @@ class ConfigDialog : public QDialog {
         /**
          * Load UI form with values from .Ini.
          */
-        void loadConfigDialog();
+        void loadConfigDialogControls();
 
         /**
          * Gettters / Setters for window.
@@ -43,7 +46,7 @@ class ConfigDialog : public QDialog {
         /**
          * Update any runtime dialog controls, range settings, etc.
          */
-        void updateConfigDialog();
+        void updateConfigDialogControls();
 
     /**
      * Override eventFilter for QSlider hover action.
@@ -65,12 +68,12 @@ class ConfigDialog : public QDialog {
         /**
          * Build the UI form layout.
          */
-        void initConfigDialog();
+        void createConfigDialogControls();
 
         /**
          * Callback to Save UI form values to .Ini.
          */
-        void saveConfigDialog();
+        void acceptConfigDialogControls();
 
         /**
          * Send an event to the X11 thread telling it to update

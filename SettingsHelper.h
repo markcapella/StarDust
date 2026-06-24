@@ -11,10 +11,12 @@ enum SettingsPropertyType {
     INT_VALUETYPE,
     BOOL_VALUETYPE,
     COLOR_VALUETYPE,
-    SLIDER_VALUETYPE
+    SLIDER_VALUETYPE,
+    DIVIDER_VALUETYPE
 };
 
 class SettingsHelper {
+
     public:
         // General.
         static inline const QString GROUP_CONFIGURABLE = APP_NAME;
@@ -34,31 +36,40 @@ class SettingsHelper {
         static inline const QString ON_TOP_INSTEAD =
             "04 Stick to Top";
 
+        static inline const QString DIVIDER_1 =
+            "05";
+
         static inline const QString BACKGROUND_COLOR =
-            "05 Background Color";
+            "06 Background Color";
         static inline const QString BACKGROUND_OPACITY =
-            "06 Background Opacity";
+            "07 Background Opacity";
 
         static inline const QString MAX_STAR_SIZE =
-            "07 Maximum Star Size";
+            "08 Maximum Star Size";
         static inline const QString STAR_SATURATION =
-            "08 Starfield Saturation";
+            "09 Starfield Saturation";
+
+        static inline const QString DIVIDER_2 =
+            "10";
 
         static inline const QString SIZE_CHANGE_DELAY =
-            "09 Size Change Delay";
+            "11 Size Change Delay";
         static inline const QString POSITION_CHANGE_DELAY =
-            "10 Position Change Delay";
+            "12 Position Change Delay";
         static inline const QString COLOR_CHANGE_DELAY =
-            "11 Color Change Delay";
+            "13 Color Change Delay";
+
+        static inline const QString DIVIDER_3 =
+            "14";
 
         static inline const QString STAR_COLOR_COOL =
-            "12 Star Color Cool";
+            "15 Star Color Cool";
         static inline const QString STAR_COLOR_WARM =
-            "13 Star Color Warm";
+            "16 Star Color Warm";
         static inline const QString STAR_COLOR_MEDIUM =
-            "14 Star Color Medium";
+            "17 Star Color Medium";
         static inline const QString STAR_COLOR_HOT =
-            "15 Star Color Hot";
+            "18 Star Color Hot";
 
         // Volatile.
 
@@ -105,6 +116,12 @@ class SettingsHelper {
               .rangeMaximum = numeric_limits<int>::max()
             },
 
+            { .group = GROUP_CONFIGURABLE, .name = DIVIDER_1,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
             { .group = GROUP_CONFIGURABLE, .name = BACKGROUND_COLOR,
               .valueType = COLOR_VALUETYPE, .initialValue = "#0055ff",
               .rangeMinimum = numeric_limits<int>::min(),
@@ -112,8 +129,45 @@ class SettingsHelper {
             },
 
             { .group = GROUP_CONFIGURABLE, .name = BACKGROUND_OPACITY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "0",
+              .valueType = SLIDER_VALUETYPE, .initialValue = "50",
               .rangeMinimum = 0, .rangeMaximum = 255
+            },
+
+            { .group = GROUP_CONFIGURABLE, .name = MAX_STAR_SIZE,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "15",
+              .rangeMinimum = 5, .rangeMaximum = 40
+            },
+
+            { .group = GROUP_CONFIGURABLE, .name = STAR_SATURATION,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "25",
+              .rangeMinimum = 5, .rangeMaximum = 100
+            },
+
+            { .group = GROUP_CONFIGURABLE, .name = DIVIDER_2,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .group = GROUP_CONFIGURABLE, .name = COLOR_CHANGE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
+              .rangeMinimum = 1, .rangeMaximum = 2000
+            },
+
+            { .group = GROUP_CONFIGURABLE, .name = SIZE_CHANGE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
+              .rangeMinimum = 1, .rangeMaximum = 2000
+            },
+
+            { .group = GROUP_CONFIGURABLE, .name = POSITION_CHANGE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
+              .rangeMinimum = 1, .rangeMaximum = 2000
+            },
+
+            { .group = GROUP_CONFIGURABLE, .name = DIVIDER_3,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
             },
 
             { .group = GROUP_CONFIGURABLE, .name = STAR_COLOR_COOL,
@@ -139,32 +193,6 @@ class SettingsHelper {
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
-
-            { .group = GROUP_CONFIGURABLE, .name = STAR_SATURATION,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "25",
-              .rangeMinimum = 5, .rangeMaximum = 100
-            },
-
-            { .group = GROUP_CONFIGURABLE, .name = MAX_STAR_SIZE,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "15",
-              .rangeMinimum = 5, .rangeMaximum = 40
-            },
-
-            { .group = GROUP_CONFIGURABLE, .name = COLOR_CHANGE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "100",
-              .rangeMinimum = 1, .rangeMaximum = 750
-            },
-
-            { .group = GROUP_CONFIGURABLE, .name = SIZE_CHANGE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "100",
-              .rangeMinimum = 1, .rangeMaximum = 750
-            },
-
-            { .group = GROUP_CONFIGURABLE, .name = POSITION_CHANGE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "100",
-              .rangeMinimum = 1, .rangeMaximum = 750
-            },
-
             // Volatile internals, hidden from ConfigDialog.
             { .group = GROUP_VOLATILE, .name = CONFIG_MODE,
               .valueType = BOOL_VALUETYPE, .initialValue = "true",

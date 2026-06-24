@@ -8,6 +8,10 @@ Canvas::Canvas(const Window window) {
     mWindow = window;
 }
 
+Canvas::~Canvas() {
+    uninitCanvas();
+}
+
 /**
  * Init/reinit() for the widget canvas.
  */
@@ -17,9 +21,7 @@ Canvas::initCanvas() {
 
     const int NUMBER_OF_NEW_STARS = getSaturatedStarCount();
     for (int i = 0; i < NUMBER_OF_NEW_STARS; i++) {
-        mStars.push_back(
-            new Star(mWindow)
-        );
+        mStars.push_back(new Star(mWindow));
         mStars[i]->startChangeTimers();
     }
 
@@ -117,6 +119,7 @@ Canvas::uninitCanvas() {
         if (mStars[i]->isVisible()) {
             mStars[i]->erase();
         }
+        delete mStars[i];
     }
     mStars.clear();
 

@@ -70,32 +70,25 @@ class StickyWindow {
         }
 
         /**
-         * Ensure window opens on valid remembered desktop.
-         */
-        void rangeCheckPreferredDesktopSetting();
-
-        /**
          * Set visibility state of the four corner control buttons.
          */
         void setControlButtonsVisibility();
 
     private:
         // Members.
+        bool mIsVisuallyTransparent = false;
+        XVisualInfo mVisualInfoStruct { };
+        Colormap mColorMap { };
+
+        Atom mDeleteMessage { };
+        Atom mConfigDialogUpdated { };
+
         Window mX11Window = None;
         char* mWindowTitle = nullptr;
 
-        bool mIsVisuallyTransparent = false;
-        XVisualInfo mVisualInfoStruct{};
-        Colormap mColorMap{};
-
-        Atom mDeleteMessage{};
-        Atom mConfigDialogUpdated{};
-
         vector<Button*> mButtons;
         mutable recursive_mutex mButtonsMutLock;
-
         unique_ptr<QTimer> mAutoHideControlsTimer{nullptr};
-        //unique_ptr<QTimer> mCanvasDrawCoalescer{nullptr};
 
         PinButton* mPinButton = nullptr;
         QuitButton* mQuitButton = nullptr;
@@ -254,10 +247,15 @@ class StickyWindow {
         bool handleX11EventQueue();
 
         /**
+         * Ensure window opens on valid remembered desktop.
+         */
+        void rangeCheckPreferredDesktopSetting();
+
+        /**
          * Update the Config Dialog if it's active &
          * the UI needs updating.
          */
-        void updateActiveConfigButtonDialog();
+        void updateActiveConfigDialog();
 
         /**
          * Receives an event from Qt ConfigDialog that it has
@@ -279,10 +277,4 @@ class StickyWindow {
          * Perform window resizing.
          */
         void resizeWindowToPoint(const QPoint position);
-
-        /**
-         * This method updates any visible ConfigDialog on drag
-         * thru desktop changing "Preferred Desktop" slider value.
-         */
-        void onPropertyNotify(const XPropertyEvent& event);
 };
