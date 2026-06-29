@@ -48,12 +48,6 @@ class ConfigDialog : public QDialog {
          */
         void updateConfigDialogControls();
 
-    /**
-     * Override eventFilter for QSlider hover action.
-     */
-    protected:
-        bool eventFilter(QObject* obj, QEvent* event) override;
-
     private:
         Window mWindow = None;
         Atom mConfigDialogUpdated{};

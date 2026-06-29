@@ -28,10 +28,11 @@ PinButton::draw(const Window window) {
 
     // Display pinIn or pinOut png.
     GC gc = XCreateGC(mDisplay, window, 0, nullptr);
-    XPutImage(mDisplay, window, gc, (mSettingsHelper->getBoolSetting(
-        SettingsHelper::CONFIG_MODE) ? mPinOutXImage : mPinInXImage),
-            0, 0, getX() + 2, getY() + 2,
-                getWidth() - 4, getHeight() - 4);
+
+    const bool CONFIG_MODE = mSettingsHelper->getConfigMode();
+    XPutImage(mDisplay, window, gc,
+        (CONFIG_MODE ? mPinOutXImage : mPinInXImage), 0, 0,
+        getX() + 2, getY() + 2, getWidth() - 4, getHeight() - 4);
     XFreeGC(mDisplay, gc);
 
     XRenderFreePicture(mDisplay, canvasPic);

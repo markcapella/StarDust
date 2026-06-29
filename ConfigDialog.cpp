@@ -47,23 +47,17 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
 void
 ConfigDialog::loadConfigDialogControls() {
     for (int i = 0; i < mFormLayout->rowCount(); ++i) {
+        const SettingsHelper::SettingsProperty THIS_SETTING =
+            SettingsHelper::PROPERTIES[i];
+        const QString THIS_KEY = THIS_SETTING.name;
+        const SettingsPropertyType THIS_VALUETYPE =
+            THIS_SETTING.valueType;
+        const QString THIS_DEFAULT_VALUE = THIS_SETTING.initialValue;
+
         // Ignore Divider lines.
-        if (SettingsHelper::PROPERTIES[i].valueType ==
-            DIVIDER_VALUETYPE) {
+        if (THIS_VALUETYPE == DIVIDER_VALUETYPE) {
             continue;
         }
-
-        // Get key, valueType, & defaultValue.
-        const QWidget* LABEL_WIDGET = mFormLayout->itemAt(
-            i, QFormLayout::LabelRole)->widget();
-
-        const QString THIS_KEY =
-            QString("%1 ").arg(i, 2, 10, QChar('0')) +
-            LABEL_WIDGET->property("text").toString();
-        const SettingsPropertyType THIS_VALUETYPE =
-            mSettingsHelper->getSettingsValueType(THIS_KEY);
-        const QString THIS_DEFAULT_VALUE =
-            mSettingsHelper->getSettingsDefaultValue(THIS_KEY);
 
         // Get QLineEdit for Strings.
         if (THIS_VALUETYPE == STRING_VALUETYPE) {
@@ -71,10 +65,8 @@ ConfigDialog::loadConfigDialogControls() {
             stringEditWidget = qobject_cast<QLineEdit*>(mFormLayout->
                 itemAt(i, QFormLayout::FieldRole)->widget());
             if (stringEditWidget) {
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 const QString VALUE = mSettingsHelper->getQSettings()->
                     value(THIS_KEY, THIS_DEFAULT_VALUE).toString();
-                mSettingsHelper->getQSettings()->endGroup();
                 stringEditWidget->setText(VALUE);
             }
             continue;
@@ -86,10 +78,8 @@ ConfigDialog::loadConfigDialogControls() {
             lineEditWidget = qobject_cast<QLineEdit*>(mFormLayout->
                 itemAt(i, QFormLayout::FieldRole)->widget());
             if (lineEditWidget) {
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 const int VALUE = mSettingsHelper->getQSettings()->
                     value(THIS_KEY, THIS_DEFAULT_VALUE).toInt();
-                mSettingsHelper->getQSettings()->endGroup();
                 lineEditWidget->setText(QString::number(VALUE));
             }
             continue;
@@ -101,10 +91,8 @@ ConfigDialog::loadConfigDialogControls() {
             checkboxWidget = qobject_cast<QCheckBox*>(mFormLayout->
                 itemAt(i, QFormLayout::FieldRole)->widget());
             if (checkboxWidget) {
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 const QString VALUE = mSettingsHelper->getQSettings()->
                     value(THIS_KEY, THIS_DEFAULT_VALUE).toString();
-                mSettingsHelper->getQSettings()->endGroup();
                 checkboxWidget->setCheckState(VALUE == "true" ?
                     Qt::Checked : Qt::Unchecked );
             }
@@ -117,10 +105,8 @@ ConfigDialog::loadConfigDialogControls() {
             colorButtonWidget = qobject_cast<ColorButton*>(mFormLayout->
                 itemAt(i, QFormLayout::FieldRole)->widget());
             if (colorButtonWidget) {
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 const QString VALUE = mSettingsHelper->getQSettings()->
                     value(THIS_KEY, THIS_DEFAULT_VALUE).toString();
-                mSettingsHelper->getQSettings()->endGroup();
                 colorButtonWidget->setButtonColor(QColor(VALUE));
             }
             continue;
@@ -151,19 +137,16 @@ ConfigDialog::loadConfigDialogControls() {
 void
 ConfigDialog::updateConfigDialogControls() {
     for (int i = 0; i < mFormLayout->rowCount(); ++i) {
+        const SettingsHelper::SettingsProperty THIS_SETTING =
+            SettingsHelper::PROPERTIES[i];
+        const QString THIS_KEY = THIS_SETTING.name;
+        const SettingsPropertyType THIS_VALUETYPE =
+            THIS_SETTING.valueType;
+
         // Ignore Divider lines.
-        if (SettingsHelper::PROPERTIES[i].valueType ==
-            DIVIDER_VALUETYPE) {
+        if (THIS_VALUETYPE == DIVIDER_VALUETYPE) {
             continue;
         }
-
-        // Get key.
-        const QWidget* LABEL_WIDGET = mFormLayout->itemAt(
-            i, QFormLayout::LabelRole)->widget();
-
-        const QString THIS_KEY =
-            QString("%1 ").arg(i, 2, 10, QChar('0')) +
-            LABEL_WIDGET->property("text").toString();
 
         // Reset desktop preference slider for 2 reasons.
         if (THIS_KEY == SettingsHelper::PREFERRED_DESKTOP) {
@@ -194,28 +177,6 @@ ConfigDialog::updateConfigDialogControls() {
 }
 
 /**
- * Override eventFilter for QSlider hover action & tooltip.
- */
-bool
-ConfigDialog::eventFilter(QObject* obj, QEvent* event) {
-    // Intercept both static hover (ToolTip event)
-    // and active movement (MouseMove).
-    QSlider* slider = qobject_cast<QSlider*> (obj);
-    if (slider) {
-        if (event->type() == QEvent::ToolTip ||
-            event->type() == QEvent::MouseMove) {
-            if (!slider->isSliderDown()) {
-                QToolTip::showText(QCursor::pos(),
-                    QString::number(slider->value()), slider);
-            }
-            return true;
-        }
-    }
-
-    return ConfigDialog::eventFilter(obj, event);
-}
-
-/**
  * Build the UI form layout.
  */
 void
@@ -226,23 +187,18 @@ ConfigDialog::createConfigDialogControls() {
         0, FORM_TOP_BOTTOM_SPACING);
     mFormLayout->setVerticalSpacing(FORM_LAYOUT_ROW_SPACING);
 
-    // Begin group, get all keys, close group.
-    mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
-    const QStringList ALL_KEYS = mSettingsHelper->
-        getQSettings()->allKeys();
-    mSettingsHelper->getQSettings()->endGroup();
-
-    // Construct edit widget rows from keys & add to mFormLayout.
-    for (const QString& THIS_KEY : ALL_KEYS) {
-        // Get key valueType & key display value;
+    const int SETTINGS_SIZE = SettingsHelper::PROPERTIES.size();
+    for (int i = 0; i < SETTINGS_SIZE; i++) {
+        const SettingsHelper::SettingsProperty THIS_SETTING =
+            SettingsHelper::PROPERTIES[i];
+        const QString THIS_KEY = THIS_SETTING.name;
         const SettingsPropertyType THIS_VALUETYPE =
-            mSettingsHelper->getSettingsValueType(THIS_KEY);
-        const QString THIS_DISPLAY_KEY = THIS_KEY.mid(3);
+            THIS_SETTING.valueType;
 
         // Get QLineEdit for Divider lines.
         if (THIS_VALUETYPE == DIVIDER_VALUETYPE) {
             QLabel* dividerWidget = new QLabel(this);
-            dividerWidget->setObjectName(THIS_DISPLAY_KEY);
+            dividerWidget->setObjectName(THIS_KEY);
             const int SLIDER_HEIGHT_VALUE = mSettingsHelper->
                 getIntSetting(THIS_KEY);
             dividerWidget->setFixedHeight(SLIDER_HEIGHT_VALUE);
@@ -253,44 +209,44 @@ ConfigDialog::createConfigDialogControls() {
         // Get QLineEdit for Strings.
         if (THIS_VALUETYPE == STRING_VALUETYPE) {
             QLineEdit* stringEditWidget = new QLineEdit(this);
-            stringEditWidget->setObjectName(THIS_DISPLAY_KEY);
+            stringEditWidget->setObjectName(THIS_KEY);
             stringEditWidget->setFixedWidth(360);
-            mFormLayout->addRow(THIS_DISPLAY_KEY, stringEditWidget);
+            mFormLayout->addRow(THIS_KEY, stringEditWidget);
             continue;
         }
 
         // Get QlineEdit for Ints.
         if (THIS_VALUETYPE == INT_VALUETYPE) {
             QLineEdit* lineEditWidget = new QLineEdit(this);
-            lineEditWidget->setObjectName(THIS_DISPLAY_KEY);
+            lineEditWidget->setObjectName(THIS_KEY);
             lineEditWidget->setFixedWidth(120);
-            mFormLayout->addRow(THIS_DISPLAY_KEY, lineEditWidget);
+            mFormLayout->addRow(THIS_KEY, lineEditWidget);
             continue;
         }
 
         // Get QCheckBox for Booleans.
         if (THIS_VALUETYPE == BOOL_VALUETYPE) {
             QCheckBox* checkboxWidget = new QCheckBox(this);
-            checkboxWidget->setObjectName(THIS_DISPLAY_KEY);
-            mFormLayout->addRow(THIS_DISPLAY_KEY, checkboxWidget);
+            checkboxWidget->setObjectName(THIS_KEY);
+            mFormLayout->addRow(THIS_KEY, checkboxWidget);
             continue;
         }
 
         // Get QColorButton for Colors.
         if (THIS_VALUETYPE == COLOR_VALUETYPE) {
             ColorButton* colorButtonWidget = new ColorButton(
-                THIS_DISPLAY_KEY, this);
-            colorButtonWidget->setObjectName(THIS_DISPLAY_KEY);
-            mFormLayout->addRow(THIS_DISPLAY_KEY, colorButtonWidget);
+                THIS_KEY, this);
+            colorButtonWidget->setObjectName(THIS_KEY);
+            mFormLayout->addRow(THIS_KEY, colorButtonWidget);
             continue;
         }
 
         // Get QSlider for preferredDesktop.
         if (THIS_VALUETYPE == SLIDER_VALUETYPE) {
             QSlider* sliderEditWidget = new QSlider(Qt::Horizontal, this);
-            sliderEditWidget->setObjectName(THIS_DISPLAY_KEY);
+            sliderEditWidget->setObjectName(THIS_KEY);
             sliderEditWidget->setFixedWidth(120);
-            mFormLayout->addRow(THIS_DISPLAY_KEY, sliderEditWidget);
+            mFormLayout->addRow(THIS_KEY, sliderEditWidget);
 
             // Nice tooltip on slow hover.
             if (THIS_KEY == SettingsHelper::AUTOHIDE_DELAY) {
@@ -446,23 +402,16 @@ ConfigDialog::createConfigDialogControls() {
 void
 ConfigDialog::acceptConfigDialogControls() {
     for (int i = 0; i < mFormLayout->rowCount(); ++i) {
+        const SettingsHelper::SettingsProperty THIS_SETTING =
+            SettingsHelper::PROPERTIES[i];
+        const QString THIS_KEY = THIS_SETTING.name;
+        const SettingsPropertyType THIS_VALUETYPE =
+            THIS_SETTING.valueType;
+
         // Ignore Divider lines.
-        if (SettingsHelper::PROPERTIES[i].valueType ==
-            DIVIDER_VALUETYPE) {
+        if (THIS_VALUETYPE == DIVIDER_VALUETYPE) {
             continue;
         }
-
-        // Get key, valueType, & defaultValue.
-        const QWidget* LABEL_WIDGET = mFormLayout->itemAt(
-            i, QFormLayout::LabelRole)->widget();
-
-        const QString THIS_KEY =
-            QString("%1 ").arg(i, 2, 10, QChar('0')) +
-            LABEL_WIDGET->property("text").toString();
-        const SettingsPropertyType THIS_VALUETYPE =
-            mSettingsHelper->getSettingsValueType(THIS_KEY);
-        const QString THIS_DEFAULT_VALUE =
-            mSettingsHelper->getSettingsDefaultValue(THIS_KEY);
 
         // Get QLineEdit for Strings.
         if (THIS_VALUETYPE == STRING_VALUETYPE) {
@@ -471,10 +420,8 @@ ConfigDialog::acceptConfigDialogControls() {
                 itemAt(i, QFormLayout::FieldRole)->widget());
             if (stringEditWidget) {
                 const QString VALUE = stringEditWidget->text();
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 mSettingsHelper->getQSettings()->
                     setValue(THIS_KEY, VALUE);
-                mSettingsHelper->getQSettings()->endGroup();
             }
             continue;
         }
@@ -486,10 +433,8 @@ ConfigDialog::acceptConfigDialogControls() {
                 itemAt(i, QFormLayout::FieldRole)->widget());
             if (lineEditWidget) {
                 const int VALUE = lineEditWidget->text().toInt();
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 mSettingsHelper->getQSettings()->
                     setValue(THIS_KEY, VALUE);
-                mSettingsHelper->getQSettings()->endGroup();
             }
             continue;
         }
@@ -501,10 +446,8 @@ ConfigDialog::acceptConfigDialogControls() {
                 itemAt(i, QFormLayout::FieldRole)->widget());
             if (checkboxWidget) {
                 const bool VALUE = checkboxWidget->checkState();
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 mSettingsHelper->getQSettings()->
                     setValue(THIS_KEY, VALUE);
-                mSettingsHelper->getQSettings()->endGroup();
             }
             continue;
         }
@@ -517,10 +460,8 @@ ConfigDialog::acceptConfigDialogControls() {
             if (colorButtonWidget) {
                 const QString VALUE = colorButtonWidget->
                     getButtonColor().name();
-                mSettingsHelper->getQSettings()->beginGroup(APP_NAME);
                 mSettingsHelper->getQSettings()->
                     setValue(THIS_KEY, VALUE);
-                mSettingsHelper->getQSettings()->endGroup();
             }
             continue;
         }

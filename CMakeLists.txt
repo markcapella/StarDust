@@ -14,7 +14,7 @@ set(APP_NAME "StarDust")
 set(APP_DESC "A colorful deep star field that twinkles and")
 set(APP_DESC "${APP_DESC} slowly changes on your desktop.")
 
-set(APP_VERSION "26.06.24")
+set(APP_VERSION "26.06.29")
 set(APP_VERSION_MINOR "00")
 
 set(APP_AUTHOR "Mark James Capella")

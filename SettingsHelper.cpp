@@ -141,26 +141,17 @@ SettingsHelper::setCanvasHeight(const double height) {
 }
 
 /**
- * Helper to return a QSettings filename from appName.
+ * Getters & setters of window config mode.
  */
-QString
-SettingsHelper::getQSettingsFile() {
-    return getenv("HOME") + QStringLiteral("/.local/") +
-        QString(APP_NAME) + "/" + mRecentsHelper->
-            getAppRecentsName() + QStringLiteral(".ini");
+bool
+SettingsHelper::getConfigMode() {
+    return getQSettings()->value("inConfigMode", true).toBool();
 }
+void
+SettingsHelper::setConfigMode(const bool state) {
+    getQSettings()->setValue("inConfigMode", state);
 
-/**
- * Helper to return a new QSettings object for pref
- * access based on our appName.
- */
-QSettings*
-SettingsHelper::getQSettings() {
-    if (!mQSettings) {
-        mQSettings = new QSettings(getQSettingsFile(),
-            QSettings::IniFormat);
-    }
-    return mQSettings;
+    getQSettings()->sync();
 }
 
 /**
@@ -173,15 +164,11 @@ SettingsHelper::ensureSettingsAreConfigurable() {
 
     for (int i = 0; i < INITIAL_SETTINGS_SIZE; i++) {
         const SettingsProperty property = PROPERTIES[i];
-        getQSettings()->beginGroup(property.group);
-
         const QVariant SETTING_VARIANT =
             getQSettings()->value(property.name);
         if (!SETTING_VARIANT.isValid()) {
             getQSettings()->setValue(property.name, property.initialValue);
         }
-
-        getQSettings()->endGroup();
     }
 
     mSettingsHelper->getQSettings()->sync();
@@ -192,14 +179,8 @@ SettingsHelper::ensureSettingsAreConfigurable() {
  */
 bool
 SettingsHelper::getBoolSetting(const QString setting) {
-    getQSettings()->beginGroup(mSettingsHelper->
-        getSettingsGroup(setting));
-
     const bool RESULT = getQSettings()->value(setting,
         getSettingsDefaultValue(setting)).toBool();
-
-    getQSettings()->endGroup();
-
     return RESULT;
 }
 
@@ -209,12 +190,7 @@ SettingsHelper::getBoolSetting(const QString setting) {
 void
 SettingsHelper::setBoolSetting(const QString setting,
     const bool value) {
-    getQSettings()->beginGroup(mSettingsHelper->
-        getSettingsGroup(setting));
-
     getQSettings()->setValue(setting, value);
-
-    getQSettings()->endGroup();
 }
 
 /**
@@ -222,14 +198,8 @@ SettingsHelper::setBoolSetting(const QString setting,
  */
 int
 SettingsHelper::getIntSetting(const QString setting) {
-    getQSettings()->beginGroup(mSettingsHelper->
-        getSettingsGroup(setting));
-
     const int RESULT = getQSettings()->value(setting,
         getSettingsDefaultValue(setting)).toInt();
-
-    getQSettings()->endGroup();
-
     return RESULT;
 }
 
@@ -239,12 +209,7 @@ SettingsHelper::getIntSetting(const QString setting) {
 void
 SettingsHelper::setIntSetting(const QString setting,
     int value) {
-    getQSettings()->beginGroup(mSettingsHelper->
-        getSettingsGroup(setting));
-
     getQSettings()->setValue(setting, value);
-
-    getQSettings()->endGroup();
 }
 
 /**
@@ -252,13 +217,8 @@ SettingsHelper::setIntSetting(const QString setting,
  */
 XRenderColor
 SettingsHelper::getColorSetting(const QString setting) {
-    getQSettings()->beginGroup(mSettingsHelper->
-        getSettingsGroup(setting));
-
     const QColor COLOR = QColor(getQSettings()->value(
         setting, getSettingsDefaultValue(setting)).toString());
-
-    getQSettings()->endGroup();
 
     XRenderColor xColor;
     xColor.red   = (COLOR.red() << 8) | 0xff;
@@ -266,22 +226,6 @@ SettingsHelper::getColorSetting(const QString setting) {
     xColor.blue  = (COLOR.blue() << 8) | 0xff;
     xColor.alpha = (COLOR.alpha() << 8) | 0xff;
     return xColor;
-}
-
-/**
- * Return the group of a Setting by key.
- */
-QString
-SettingsHelper::getSettingsGroup(const QString key) {
-    const int SETTINGS_SIZE = PROPERTIES.size();
-
-    for (int i = 0; i < SETTINGS_SIZE; i++) {
-        const SettingsProperty THIS_SETTING = PROPERTIES[i];
-        if (key == THIS_SETTING.name) {
-            return THIS_SETTING.group;
-        }
-    }
-    return "";
 }
 
 /**
@@ -360,4 +304,27 @@ SettingsHelper::getSettingsIntRangeMaximum(const QString key) {
         }
     }
     return resultValue;
+}
+
+/**
+ * Helper to return a new QSettings object for pref
+ * access based on our appName.
+ */
+QSettings*
+SettingsHelper::getQSettings() {
+    if (!mQSettings) {
+        mQSettings = new QSettings(getQSettingsFile(),
+            QSettings::IniFormat);
+    }
+    return mQSettings;
+}
+
+/**
+ * Helper to return a QSettings filename from appName.
+ */
+QString
+SettingsHelper::getQSettingsFile() {
+    return getenv("HOME") + QStringLiteral("/.local/") +
+        QString(APP_NAME) + "/" + mRecentsHelper->
+            getAppRecentsName() + QStringLiteral(".ini");
 }

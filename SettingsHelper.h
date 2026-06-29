@@ -16,64 +16,36 @@ enum SettingsPropertyType {
 };
 
 class SettingsHelper {
+    #define IC_QString static inline const QString
 
     public:
-        // General.
-        static inline const QString GROUP_CONFIGURABLE = APP_NAME;
-        static inline const QString GROUP_VOLATILE = "Volatile";
-
         // Configurable.
-        static inline const QString AUTOHIDE_CONTROLS =
-            "00 Auto hide Controls";
-        static inline const QString AUTOHIDE_DELAY =
-            "01 Auto hide Delay";
+        IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
+        IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
+        IC_QString PREFERRED_DESKTOP = "Preferred Desktop";
+        IC_QString ALLOW_DESKTOP_DRAG = "Allow Desktop Drag";
+        IC_QString ON_TOP_INSTEAD = "Stick to Top";
+        IC_QString DIVIDER_1 = "divider01";
 
-        static inline const QString PREFERRED_DESKTOP =
-            "02 Preferred Desktop";
-        static inline const QString ALLOW_DESKTOP_DRAG =
-            "03 Allow Desktop Drag";
+        IC_QString BACKGROUND_COLOR = "Background Color";
+        IC_QString BACKGROUND_OPACITY = "Background Opacity";
+        IC_QString MAX_STAR_SIZE = "Maximum Star Size";
+        IC_QString STAR_SATURATION = "Starfield Saturation";
+        IC_QString DIVIDER_2 = "divider02";
 
-        static inline const QString ON_TOP_INSTEAD =
-            "04 Stick to Top";
+        IC_QString SIZE_CHANGE_DELAY = "Size Change Delay";
+        IC_QString POSITION_CHANGE_DELAY = "Position Change Delay";
+        IC_QString COLOR_CHANGE_DELAY = "Color Change Delay";
+        IC_QString DIVIDER_3 = "divider03";
 
-        static inline const QString DIVIDER_1 = "05";
+        IC_QString STAR_COLOR_COOL = "Star Color Cool";
+        IC_QString STAR_COLOR_WARM = "Star Color Warm";
+        IC_QString STAR_COLOR_MEDIUM = "Star Color Medium";
+        IC_QString STAR_COLOR_HOT = "Star Color Hot";
 
-        static inline const QString BACKGROUND_COLOR =
-            "06 Background Color";
-        static inline const QString BACKGROUND_OPACITY =
-            "07 Background Opacity";
-
-        static inline const QString MAX_STAR_SIZE =
-            "08 Maximum Star Size";
-        static inline const QString STAR_SATURATION =
-            "09 Starfield Saturation";
-
-        static inline const QString DIVIDER_2 = "10";
-
-        static inline const QString SIZE_CHANGE_DELAY =
-            "11 Size Change Delay";
-        static inline const QString POSITION_CHANGE_DELAY =
-            "12 Position Change Delay";
-        static inline const QString COLOR_CHANGE_DELAY =
-            "13 Color Change Delay";
-
-        static inline const QString DIVIDER_3 = "14";
-
-        static inline const QString STAR_COLOR_COOL =
-            "15 Star Color Cool";
-        static inline const QString STAR_COLOR_WARM =
-            "16 Star Color Warm";
-        static inline const QString STAR_COLOR_MEDIUM =
-            "17 Star Color Medium";
-        static inline const QString STAR_COLOR_HOT =
-            "18 Star Color Hot";
-
-        // Volatile.
-        static inline const QString CONFIG_MODE = "In Config mode";
 
         // Settings property struct.
         struct SettingsProperty {
-            QString group = "";
             QString name = "";
             SettingsPropertyType valueType = NONE_VALUETYPE;
             QString initialValue = "";
@@ -83,117 +55,111 @@ class SettingsHelper {
 
         static inline const vector<SettingsProperty> PROPERTIES = {
             // App configurables.
-            { .group = GROUP_CONFIGURABLE, .name = AUTOHIDE_CONTROLS,
+            { .name = AUTOHIDE_CONTROLS,
               .valueType = BOOL_VALUETYPE, .initialValue = "false",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = AUTOHIDE_DELAY,
+            { .name = AUTOHIDE_DELAY,
               .valueType = SLIDER_VALUETYPE, .initialValue = "4",
               .rangeMinimum = 1, .rangeMaximum = 9
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = PREFERRED_DESKTOP,
+            { .name = PREFERRED_DESKTOP,
               .valueType = SLIDER_VALUETYPE, .initialValue = "-1",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = ALLOW_DESKTOP_DRAG,
+            { .name = ALLOW_DESKTOP_DRAG,
               .valueType = BOOL_VALUETYPE, .initialValue = "true",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = ON_TOP_INSTEAD,
+            { .name = ON_TOP_INSTEAD,
               .valueType = BOOL_VALUETYPE, .initialValue = "false",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = DIVIDER_1,
+            { .name = DIVIDER_1,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "10",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = BACKGROUND_COLOR,
+            { .name = BACKGROUND_COLOR,
               .valueType = COLOR_VALUETYPE, .initialValue = "#0055ff",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = BACKGROUND_OPACITY,
+            { .name = BACKGROUND_OPACITY,
               .valueType = SLIDER_VALUETYPE, .initialValue = "50",
               .rangeMinimum = 0, .rangeMaximum = 255
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = MAX_STAR_SIZE,
+            { .name = MAX_STAR_SIZE,
               .valueType = SLIDER_VALUETYPE, .initialValue = "15",
               .rangeMinimum = 5, .rangeMaximum = 40
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = STAR_SATURATION,
+            { .name = STAR_SATURATION,
               .valueType = SLIDER_VALUETYPE, .initialValue = "25",
               .rangeMinimum = 5, .rangeMaximum = 100
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = DIVIDER_2,
+            { .name = DIVIDER_2,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = COLOR_CHANGE_DELAY,
+            { .name = COLOR_CHANGE_DELAY,
               .valueType = SLIDER_VALUETYPE, .initialValue = "500",
               .rangeMinimum = 1, .rangeMaximum = 2000
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = SIZE_CHANGE_DELAY,
+            { .name = SIZE_CHANGE_DELAY,
               .valueType = SLIDER_VALUETYPE, .initialValue = "500",
               .rangeMinimum = 1, .rangeMaximum = 2000
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = POSITION_CHANGE_DELAY,
+            { .name = POSITION_CHANGE_DELAY,
               .valueType = SLIDER_VALUETYPE, .initialValue = "500",
               .rangeMinimum = 1, .rangeMaximum = 2000
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = DIVIDER_3,
+            { .name = DIVIDER_3,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = STAR_COLOR_COOL,
+            { .name = STAR_COLOR_COOL,
               .valueType = COLOR_VALUETYPE, .initialValue = "#fff9d7",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = STAR_COLOR_WARM,
+            { .name = STAR_COLOR_WARM,
               .valueType = COLOR_VALUETYPE, .initialValue = "#FFBF00",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = STAR_COLOR_MEDIUM,
+            { .name = STAR_COLOR_MEDIUM,
               .valueType = COLOR_VALUETYPE, .initialValue = "#ff7b08",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .group = GROUP_CONFIGURABLE, .name = STAR_COLOR_HOT,
+            { .name = STAR_COLOR_HOT,
               .valueType = COLOR_VALUETYPE, .initialValue = "#ff1170",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            // Volatile internals, hidden from ConfigDialog.
-            { .group = GROUP_VOLATILE, .name = CONFIG_MODE,
-              .valueType = BOOL_VALUETYPE, .initialValue = "true",
-              .rangeMinimum = 0, .rangeMaximum = 1
             }
         };
 
@@ -245,20 +211,17 @@ class SettingsHelper {
         void setCanvasHeight(const double height);
 
         /**
-         * Helper to return a QSettings filename from appName.
+         * Getters & setters of window config mode.
          */
-        QString getQSettingsFile();
+        bool getConfigMode();
 
-        /**
-         * Helper to return a new QSettings object for pref
-         * access based on our appName.
-         */
-        QSettings* getQSettings();
+        void setConfigMode(const bool state);
 
         /**
          * Getters & setters for user configurable bool settings.
          */
         bool getBoolSetting(const QString setting);
+
         void setBoolSetting(const QString setting, const bool value);
 
         /**
@@ -283,11 +246,6 @@ class SettingsHelper {
         void ensureSettingsAreConfigurable();
 
         /**
-         * Return the group of a Setting by key.
-         */
-        QString getSettingsGroup(const QString key);
-
-        /**
          * Return the value type of a Setting by key.
          */
         SettingsPropertyType getSettingsValueType(const QString key);
@@ -307,9 +265,20 @@ class SettingsHelper {
          */
         int getSettingsIntRangeMaximum(const QString key);
 
+        /**
+         * Helper to return a new QSettings object for pref
+         * access based on our appName.
+         */
+        QSettings* getQSettings();
+
     private:
         // Members.
         QString mSettingsApp = "";
 
         QSettings* mQSettings = nullptr;
+
+        /**
+         * Helper to return a QSettings filename from appName.
+         */
+        QString getQSettingsFile();
 };
