@@ -90,7 +90,7 @@ For Fedora systems:
     
 ## Translations are hard, but doable in this model.
 
-    See [the README].(translations/TRANSLATION_README.md).
+[The README](/translations/TRANSLATION_README.md)
     
 ## markjamescapella@proton.me Rocks !
 
