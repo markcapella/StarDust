@@ -17,16 +17,19 @@ class ConfigDialog : public QDialog {
     Q_OBJECT
 
     public:
-        static inline const int CONFIG_DIALOG_WIDTH = 450;
-        static inline const int CONFIG_DIALOG_HEIGHT = 600;
+        static inline const int CONFIG_DIALOG_WIDTH = 575;
+        static inline const int CONFIG_DIALOG_HEIGHT = 690;
 
         static inline const int FORM_TOP_BOTTOM_SPACING = 15;
         static inline const int FORM_LAYOUT_ROW_SPACING = 8;
 
-        static inline const QString ABOUT_STRING = "About";
-
         // Constructor.
         explicit ConfigDialog(QWidget* parent = nullptr);
+
+        /**
+         * Translate Settings to desired language for display.
+         */
+        void translateConfigDialogControls();
 
         /**
          * Load UI form with values from .Ini.
@@ -56,13 +59,16 @@ class ConfigDialog : public QDialog {
         QVBoxLayout* mMainLayout = nullptr;
 
         QDialogButtonBox* mConfigButtonBox = nullptr;
+        QPushButton* mOkButton = nullptr;
+        QPushButton* mCancelButton = nullptr;
         QPushButton* mAboutButton = nullptr;
+
         QDialog* mAboutDialog = nullptr;
 
         /**
          * Build the UI form layout.
          */
-        void createConfigDialogControls();
+        void createFormLayout();
 
         /**
          * Callback to Save UI form values to .Ini.

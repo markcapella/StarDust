@@ -14,7 +14,7 @@ set(APP_NAME "StarDust")
 set(APP_DESC "A colorful deep star field that twinkles and")
 set(APP_DESC "${APP_DESC} slowly changes on your desktop.")
 
-set(APP_VERSION "26.06.29")
+set(APP_VERSION "26.07.06")
 set(APP_VERSION_MINOR "00")
 
 set(APP_AUTHOR "Mark James Capella")
@@ -118,6 +118,7 @@ set(WIDGET_SOURCES
     PinButton.cpp QuitButton.cpp MoveButton.cpp SizeButton.cpp
     ConfigDialog.cpp ColorButton.cpp AboutDialog.cpp ConfigButton.cpp
     SettingsHelper.cpp RecentsHelper.cpp DisplayHelper.cpp XHelper.cpp
+    TranslationHelper.cpp
     StickyWindow.cpp StickyWidgetIII.cpp
 )
 
@@ -165,10 +166,12 @@ target_link_libraries(${WIDGET_PROJECT} PRIVATE
 # Display leak report after app runs.
 #
 # Debug #1.
-#target_compile_options(${WIDGET_PROJECT} PRIVATE
-#    -g -O1 -Wall -Wextra -Wuninitialized -Wmaybe-uninitialized)
+#
+# target_compile_options(${WIDGET_PROJECT} PRIVATE
+#     -g -O1 -Wall -Wextra -Wuninitialized -Wmaybe-uninitialized)
 #
 # Debug #2.
+#
 #target_compile_options(${WIDGET_PROJECT} PUBLIC
 #    -g -O1 -fsanitize=address -fno-omit-frame-pointer)
 #target_link_options(${WIDGET_PROJECT} PUBLIC

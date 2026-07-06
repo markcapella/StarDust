@@ -65,8 +65,7 @@ For Fedora systems:
 ### CD into source repo.
 
     cd StarDust
-
-
+    
 ## Basic development.
 
     mkdir build
@@ -85,10 +84,16 @@ For Fedora systems:
     
     
 ## Usage after install.
+
     StarDust
     
     
+## Translations are hard, but doable in this model.
+
+    See [the README].(translations/TRANSLATION_README.md).
+    
 ## markjamescapella@proton.me Rocks !
+
     Yeah I do.
     
     Do not taunt the StarDust.

@@ -40,6 +40,7 @@ typedef chrono::steady_clock Clock;
 #include <QToolTip>
 #include <QStyleOptionFrame>
 #include <QPointer>
+#include <QComboBox>
 
 // x11 libraries.
 #include <X11/Xlib.h>
@@ -59,16 +60,27 @@ typedef chrono::steady_clock Clock;
 #include <sanitizer/lsan_interface.h>
 #include <sys/resource.h>
 
-// Application libraries.
-#include "AutoHideDelayHints.h"
-#include "DesktopPreferenceHints.h"
-#include "OpacityHints.h"
-#include "SaturationHints.h"
-#include "MaxStarSizeHints.h"
+/**
+ * Application specific.
+ */
 
-#include "ColorChangeRateHints.h"
-#include "SizeChangeRateHints.h"
-#include "PositionChangeRateHints.h"
+// Utiliy Macros.
+#define randomIntegerUpTo(n) \
+    ((int) (((n) <= 0) ? 0.0 : (drand48() * (n))))
+
+#define newRenderColor(r, g, b, a) \
+    { (unsigned short)(((r) * (a)) / 255), \
+      (unsigned short)(((g) * (a)) / 255), \
+      (unsigned short)(((b) * (a)) / 255), \
+      (unsigned short)((a) * 257) }
+
+#define I18N(english) \
+    mTranslationHelper->getTranslationOf(QString(english))
+
+
+// Application libraries.
+#include "TranslationHelper.h"
+#include "TranslationHelperStrings.h"
 
 #include "Star.h"
 #include "Canvas.h"
@@ -95,12 +107,11 @@ typedef chrono::steady_clock Clock;
 
 #include "StickyWidgetIII.h"
 
-// Utiliy Macros.
-#define randomIntegerUpTo(n) \
-    ((int) (((n) <= 0) ? 0.0 : (drand48() * (n))))
-
-#define newRenderColor(r, g, b, a) \
-    { (unsigned short)(((r) * (a)) / 255), \
-      (unsigned short)(((g) * (a)) / 255), \
-      (unsigned short)(((b) * (a)) / 255), \
-      (unsigned short)((a) * 257) }
+#include "AutoHideDelayHints.h"
+#include "DesktopPreferenceHints.h"
+#include "OpacityHints.h"
+#include "SaturationHints.h"
+#include "MaxStarSizeHints.h"
+#include "ColorChangeRateHints.h"
+#include "SizeChangeRateHints.h"
+#include "PositionChangeRateHints.h"

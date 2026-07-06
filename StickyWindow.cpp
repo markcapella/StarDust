@@ -829,18 +829,18 @@ StickyWindow::handleX11EventQueue() {
                     mWindowClickPositionY));
 
                 if (mIsSizingWindow) {
+                    mIsSizingWindow = false;
                     mCanvas->uninitCanvas();
                     eraseWindow();
+                    updateAllWindowButtons();
                     defineWindowCanvasPosition();
                     defineWindowCanvasSize();
-                    updateAllWindowButtons();
-                    setHoveredPinButtonVisibility(true);
-                    mIsSizingWindow = false;
-                    draw();
+                    //setHoveredPinButtonVisibility(true);
+                    //draw();
                 }
                 if (mIsMovingWindow) {
                     mIsMovingWindow = false;
-                    draw();
+                    //draw();
                 }
 
                 unPressAllWindowButtons();
@@ -1079,9 +1079,9 @@ StickyWindow::resizeWindowToPoint(const QPoint position) {
         getWindowWidth(), mSettingsHelper->getWindowHeight());
 
     // Resize canvas.
+    updateAllWindowButtons();
     defineWindowCanvasPosition();
     defineWindowCanvasSize();
-    updateAllWindowButtons();
 
     // Re-draw all & done.
     draw();

@@ -17,7 +17,7 @@ struct MaxStarSizeHints : public QObject {
             if (!s->isSliderDown()) {
                 const int VALUE = s->value();
                 const QString TOOLTIP_TEXT =
-                    QString::number(VALUE) + " pixels.";
+                    QString::number(VALUE) + " " + I18N("pixels");
                 QToolTip::showText(QCursor::pos(),
                     TOOLTIP_TEXT, s);
             }
@@ -29,7 +29,7 @@ struct MaxStarSizeHints : public QObject {
             if (!s->isSliderDown()) {
                 const int VALUE = s->value();
                 const QString TOOLTIP_TEXT =
-                    QString::number(VALUE) + " pixels.";
+                    QString::number(VALUE) + " " + I18N("pixels");
                 QToolTip::showText(QCursor::pos(),
                     TOOLTIP_TEXT, s);
             }

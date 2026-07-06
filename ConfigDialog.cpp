@@ -7,6 +7,8 @@
  * Simple class to represent a ConfigDialog.
  */
 ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
+    // Set the window attributes.
+    setWindowFlags(Qt::Dialog | Qt::Tool);
     resize(CONFIG_DIALOG_WIDTH, CONFIG_DIALOG_HEIGHT);
     setFixedSize(size());
 
@@ -16,17 +18,40 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
 
     QString TITLE = QString(APP_NAME);
     if (APP_RECENT_NAME != FIRST_RECENTS_NAME) {
-        TITLE += " " + APP_RECENT_NAME;
+        TITLE += " " + I18N(APP_RECENT_NAME);
     }
-    TITLE += " Settings";
+    TITLE += " " + I18N("Settings");
     setWindowTitle(QString(TITLE));
 
-    // Set the window attributes.
-    setWindowFlags(Qt::Dialog | Qt::Tool);
-    setMinimumWidth(CONFIG_DIALOG_WIDTH);
-    setMaximumHeight(CONFIG_DIALOG_HEIGHT);
+    // Add the formlayout to a formcontainer.
+    createFormLayout();
+    mFormLayout->setFormAlignment(Qt::AlignCenter);
 
-    createConfigDialogControls();
+    // Add form layout to a container.
+    QWidget* formContainer = new QWidget();
+    formContainer->setLayout(mFormLayout);
+
+    // Add the formcontainer to a scrollarea.
+    QScrollArea* scrollArea = new QScrollArea();
+    scrollArea->setWidget(formContainer);
+    scrollArea->setWidgetResizable(true);
+
+    // The whole thing wraps up into vbox layout.
+    mMainLayout = new QVBoxLayout(this);
+    mMainLayout->addWidget(scrollArea);
+
+    // Create Ok / Cancel ButtonBoxBox with an About button.
+    mConfigButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok |
+        QDialogButtonBox::Cancel, this);
+
+    mOkButton = mConfigButtonBox->button(QDialogButtonBox::Ok);
+    mOkButton->setText(I18N("Ok"));
+
+    mCancelButton = mConfigButtonBox->button(QDialogButtonBox::Cancel);
+    mCancelButton->setText(I18N("Cancel"));
+
+    mAboutButton = new QPushButton(I18N("About"));
+    mConfigButtonBox->addButton(mAboutButton, QDialogButtonBox::ActionRole);
 
     // Callbacks.
     connect(mConfigButtonBox, &QDialogButtonBox::accepted, this,
@@ -39,6 +64,56 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
     // X11 message Atoms.
     mConfigDialogUpdated = XInternAtom(mDisplay,
         CONFIG_DIALOG_UPDATED_EVENT.c_str(), False);
+
+    // Set mMainLayout as "the Layout" & done.
+    mMainLayout->addWidget(mConfigButtonBox);
+    setLayout(mMainLayout);
+}
+
+/**
+ * Translate Settings to desired language for display.
+ */
+void
+ConfigDialog::translateConfigDialogControls() {
+    // Set the window title.
+    const QString FIRST_RECENTS_NAME = mRecentsHelper->RECENTS_NAMES[0];
+    const QString APP_RECENT_NAME = mRecentsHelper->getAppRecentsName();
+
+    QString TITLE = QString(APP_NAME);
+    if (APP_RECENT_NAME != FIRST_RECENTS_NAME) {
+        TITLE += " " + I18N(APP_RECENT_NAME);
+    }
+    TITLE += " " + I18N("Settings");
+    setWindowTitle(QString(TITLE));
+
+    const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
+    for (int i = 0; i < FORM_LAYOUT_SIZE; ++i) {
+        const SettingsHelper::SettingsProperty THIS_SETTING =
+            SettingsHelper::PROPERTIES[i];
+
+        const QString THIS_KEY = THIS_SETTING.name;
+        const SettingsPropertyType THIS_VALUETYPE =
+            THIS_SETTING.valueType;
+
+        // Ignore Divider lines.
+        if (THIS_VALUETYPE == DIVIDER_VALUETYPE) {
+            continue;
+        }
+
+        const QLayoutItem* ROW = mFormLayout->itemAt(
+            i, QFormLayout::LabelRole);
+        if (ROW) {
+            QLabel* label = qobject_cast<QLabel*>(ROW->widget());
+            if (label) {
+                const QString VALUE = I18N(THIS_KEY);
+                label->setText(VALUE);
+            }
+        }
+    }
+
+    mOkButton->setText(I18N("Ok"));
+    mCancelButton->setText(I18N("Cancel"));
+    mAboutButton->setText(I18N("About"));
 }
 
 /**
@@ -46,7 +121,9 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
  */
 void
 ConfigDialog::loadConfigDialogControls() {
-    for (int i = 0; i < mFormLayout->rowCount(); ++i) {
+
+    const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
+    for (int i = 0; i < FORM_LAYOUT_SIZE; ++i) {
         const SettingsHelper::SettingsProperty THIS_SETTING =
             SettingsHelper::PROPERTIES[i];
         const QString THIS_KEY = THIS_SETTING.name;
@@ -128,6 +205,21 @@ ConfigDialog::loadConfigDialogControls() {
             }
             continue;
         }
+
+        // Get QComboBox for Language.
+        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE &&
+            THIS_KEY == SettingsHelper::APP_LANGUAGE) {
+            QComboBox* langComboWidget = nullptr;
+            langComboWidget = qobject_cast<QComboBox*>(mFormLayout->
+                itemAt(i, QFormLayout::FieldRole)->widget());
+            if (langComboWidget) {
+                const QString LANG = mSettingsHelper->
+                    getStringSetting(SettingsHelper::APP_LANGUAGE);
+                const int LANG_INDEX = ALL_LANGUAGES.indexOf(LANG);
+                langComboWidget->setCurrentIndex(LANG_INDEX);
+            }
+            continue;
+        }
     }
 }
 
@@ -136,7 +228,9 @@ ConfigDialog::loadConfigDialogControls() {
  */
 void
 ConfigDialog::updateConfigDialogControls() {
-    for (int i = 0; i < mFormLayout->rowCount(); ++i) {
+
+    const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
+    for (int i = 0; i < FORM_LAYOUT_SIZE; ++i) {
         const SettingsHelper::SettingsProperty THIS_SETTING =
             SettingsHelper::PROPERTIES[i];
         const QString THIS_KEY = THIS_SETTING.name;
@@ -180,7 +274,7 @@ ConfigDialog::updateConfigDialogControls() {
  * Build the UI form layout.
  */
 void
-ConfigDialog::createConfigDialogControls() {
+ConfigDialog::createFormLayout() {
     // Build form.
     mFormLayout = new QFormLayout();
     mFormLayout->setContentsMargins(0, FORM_TOP_BOTTOM_SPACING,
@@ -192,8 +286,8 @@ ConfigDialog::createConfigDialogControls() {
         const SettingsHelper::SettingsProperty THIS_SETTING =
             SettingsHelper::PROPERTIES[i];
         const QString THIS_KEY = THIS_SETTING.name;
-        const SettingsPropertyType THIS_VALUETYPE =
-            THIS_SETTING.valueType;
+        const SettingsPropertyType THIS_VALUETYPE = THIS_SETTING.valueType;
+        const QString I18N_DISPLAY_KEY = I18N(THIS_KEY);
 
         // Get QLineEdit for Divider lines.
         if (THIS_VALUETYPE == DIVIDER_VALUETYPE) {
@@ -211,7 +305,7 @@ ConfigDialog::createConfigDialogControls() {
             QLineEdit* stringEditWidget = new QLineEdit(this);
             stringEditWidget->setObjectName(THIS_KEY);
             stringEditWidget->setFixedWidth(360);
-            mFormLayout->addRow(THIS_KEY, stringEditWidget);
+            mFormLayout->addRow(I18N_DISPLAY_KEY, stringEditWidget);
             continue;
         }
 
@@ -220,7 +314,7 @@ ConfigDialog::createConfigDialogControls() {
             QLineEdit* lineEditWidget = new QLineEdit(this);
             lineEditWidget->setObjectName(THIS_KEY);
             lineEditWidget->setFixedWidth(120);
-            mFormLayout->addRow(THIS_KEY, lineEditWidget);
+            mFormLayout->addRow(I18N_DISPLAY_KEY, lineEditWidget);
             continue;
         }
 
@@ -228,7 +322,7 @@ ConfigDialog::createConfigDialogControls() {
         if (THIS_VALUETYPE == BOOL_VALUETYPE) {
             QCheckBox* checkboxWidget = new QCheckBox(this);
             checkboxWidget->setObjectName(THIS_KEY);
-            mFormLayout->addRow(THIS_KEY, checkboxWidget);
+            mFormLayout->addRow(I18N_DISPLAY_KEY, checkboxWidget);
             continue;
         }
 
@@ -237,7 +331,7 @@ ConfigDialog::createConfigDialogControls() {
             ColorButton* colorButtonWidget = new ColorButton(
                 THIS_KEY, this);
             colorButtonWidget->setObjectName(THIS_KEY);
-            mFormLayout->addRow(THIS_KEY, colorButtonWidget);
+            mFormLayout->addRow(I18N_DISPLAY_KEY, colorButtonWidget);
             continue;
         }
 
@@ -245,15 +339,15 @@ ConfigDialog::createConfigDialogControls() {
         if (THIS_VALUETYPE == SLIDER_VALUETYPE) {
             QSlider* sliderEditWidget = new QSlider(Qt::Horizontal, this);
             sliderEditWidget->setObjectName(THIS_KEY);
-            sliderEditWidget->setFixedWidth(120);
-            mFormLayout->addRow(THIS_KEY, sliderEditWidget);
+            sliderEditWidget->setFixedWidth(160);
+            mFormLayout->addRow(I18N_DISPLAY_KEY, sliderEditWidget);
 
             // Nice tooltip on slow hover.
             if (THIS_KEY == SettingsHelper::AUTOHIDE_DELAY) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
                     sliderEditWidget, [sliderEditWidget] (int value) {
                     const QString TOOLTIP_TEXT = QString::number(value) +
-                        " seconds";
+                        " " + I18N("seconds");
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
                 });
@@ -277,7 +371,8 @@ ConfigDialog::createConfigDialogControls() {
                     const QPoint GLOBAL_POSITION = sliderEditWidget->
                         mapToGlobal(LOCAL_POSITION);
                     const QString TOOLTIP_TEXT = (value == -1) ?
-                        "All" : "Desktop " + QString::number(value + 1);
+                        I18N("All") : I18N("Desktop") + " " +
+                        QString::number(value + 1);
                     QToolTip::showText(GLOBAL_POSITION, TOOLTIP_TEXT,
                         sliderEditWidget);
                 });
@@ -316,8 +411,8 @@ ConfigDialog::createConfigDialogControls() {
             if (THIS_KEY == SettingsHelper::MAX_STAR_SIZE) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
                     sliderEditWidget, [sliderEditWidget] (int value) {
-                    const QString TOOLTIP_TEXT = QString::number(value)
-                        + " pixels.";
+                    const QString TOOLTIP_TEXT = QString::number(value) +
+                        " " + I18N("pixels");
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
                 });
@@ -365,35 +460,17 @@ ConfigDialog::createConfigDialogControls() {
                 continue;
             }
         }
+
+        // Get QComboBox for Language.
+        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE &&
+            THIS_KEY == SettingsHelper::APP_LANGUAGE) {
+            QComboBox* langComboWidget = new QComboBox(this);
+            langComboWidget->addItems(ALL_LANGUAGES);
+            langComboWidget->setObjectName(THIS_KEY);
+            mFormLayout->addRow(I18N_DISPLAY_KEY, langComboWidget);
+            continue;
+        }
     }
-
-    // Add the formlayout to a formcontainer.
-    QWidget* formContainer = new QWidget();
-    mFormLayout->setFormAlignment(Qt::AlignCenter);
-    formContainer->setLayout(mFormLayout);
-
-    // Add the formcontainer to a scrollarea.
-    QScrollArea* scrollArea = new QScrollArea();
-    scrollArea->setWidget(formContainer);
-    scrollArea->setWidgetResizable(true);
-
-    // The whole thing wraps up into vbox layout.
-    mMainLayout = new QVBoxLayout(this);
-    mMainLayout->addWidget(scrollArea);
-
-    // Create Ok / Cancel ButtonBoxBox with an About button.
-    mConfigButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok |
-        QDialogButtonBox::Cancel, this);
-
-    // Create AboutDialog for About button dialog.
-    mAboutDialog = new AboutDialog(this);
-    mAboutButton = new QPushButton(ABOUT_STRING);
-    mConfigButtonBox->addButton(mAboutButton,
-        QDialogButtonBox::ActionRole);
-
-    // Set mMainLayout as "the Layout" & done.
-    mMainLayout->addWidget(mConfigButtonBox);
-    setLayout(mMainLayout);
 }
 
 /**
@@ -401,7 +478,9 @@ ConfigDialog::createConfigDialogControls() {
  */
 void
 ConfigDialog::acceptConfigDialogControls() {
-    for (int i = 0; i < mFormLayout->rowCount(); ++i) {
+
+    const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
+    for (int i = 0; i < FORM_LAYOUT_SIZE; ++i) {
         const SettingsHelper::SettingsProperty THIS_SETTING =
             SettingsHelper::PROPERTIES[i];
         const QString THIS_KEY = THIS_SETTING.name;
@@ -477,6 +556,19 @@ ConfigDialog::acceptConfigDialogControls() {
             }
             continue;
         }
+
+        // Get QComboBox for Language.
+        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE &&
+            THIS_KEY == SettingsHelper::APP_LANGUAGE) {
+            QComboBox* langComboWidget = nullptr;
+            langComboWidget = qobject_cast<QComboBox*>(mFormLayout->
+                itemAt(i, QFormLayout::FieldRole)->widget());
+            if (langComboWidget) {
+                const QString VALUE = langComboWidget->currentText();
+                mSettingsHelper->setStringSetting(THIS_KEY, VALUE);
+            }
+            continue;
+        }
     }
 
     // Signal X11 thread we're updated.
@@ -509,5 +601,7 @@ ConfigDialog::sendConfigDialogUpdatedEvent() {
  */
 void
 ConfigDialog::about() {
+
+    mAboutDialog = new AboutDialog(this);
     mAboutDialog->show();
 }

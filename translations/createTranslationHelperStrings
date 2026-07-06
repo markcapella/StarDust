@@ -1,0 +1,199 @@
+#!/bin/bash
+
+##
+# Script to create includable .h file of Translated App strings
+# for runtime support of i18n.
+#
+
+# Color styling.
+COLOR_RED='\e[0;31m'
+COLOR_GREEN='\e[1;32m'
+COLOR_YELLOW='\e[1;33m'
+COLOR_BLUE='\e[0;34m'
+COLOR_NORMAL='\033[0m'
+
+# Define files.
+CONFIG_FILE="APP_LANGUAGES.conf"
+
+INPUT_FILE="APP_STRINGS_TRANSLATED.txt"
+OUTPUT_FILE="TranslationHelperStrings.h"
+
+# Ensure input file.
+if [ ! -f "$INPUT_FILE" ]; then
+    ERROR_MESSAGE="${COLOR_YELLOW}""Error. ""${COLOR_NORMAL}"
+    ERROR_MESSAGE+="Please run script |""${COLOR_YELLOW}"
+    ERROR_MESSAGE+="getTranslatedAppStrings"${COLOR_NORMAL}"| first."
+    echo -e "$ERROR_MESSAGE"
+    exit 1
+fi
+
+# Pre-clear output file.
+echo > "$OUTPUT_FILE"
+
+# Read lines, not fields.
+INITIAL_IFS="$IFS"
+IFS=$'\n'
+
+
+##
+# 1.1) Count LANGUAGES.
+#
+# 1.2) Start ALL_LANGUAGES.
+#     const QStringList ALL_LANGUAGES = {
+#         "en",
+#     but omit the final "," if the last language.
+#
+# 1.3) For each ALL_LANGUAGES.
+#         "de",           -or-
+#         "es",           etc.
+#     but omit the final "," if the last language.
+#
+# 1.4) Finish ALL_LANGUAGES.
+#     }
+#
+
+# 1.1) Count LANGUAGES.
+LANGUAGES_COUNT=0
+for LANGUAGE in $(cat "$CONFIG_FILE")
+do
+    if [[ -n "$LANGUAGE" && \
+        "$LANGUAGE" != "#"* && "$LANGUAGE" != "en" ]]; then
+        ((LANGUAGES_COUNT++))
+    fi
+done
+
+# Ensure @ least english & one translated Language in set.
+if [[ "$LANGUAGES_COUNT" == "0" ]]; then
+    ERROR_MESSAGE="${COLOR_YELLOW}""Error. ""${COLOR_NORMAL}"
+    ERROR_MESSAGE+="Please specify @ least one language for translation "
+    ERROR_MESSAGE+="in file : ""$CONFIG_FILE"".""${COLOR_YELLOW}"
+    echo -e "$ERROR_MESSAGE"
+    exit 1
+fi
+
+echo
+echo "$LANGUAGES_COUNT"" languages translated, (english assumed)."
+
+# 1.2) Start ALL_LANGUAGES.
+echo "const QStringList ALL_LANGUAGES = {" >> \
+    "$OUTPUT_FILE"
+
+if [[ "$LANGUAGES_COUNT" != "0" ]]; then
+    echo "    \""en"\"," >> "$OUTPUT_FILE"
+else
+    echo "    \""en"\"" >> "$OUTPUT_FILE"
+fi
+
+# 1.3) For each ALL_LANGUAGES.
+S1_LANGUAGE_COUNT=0
+for LANGUAGE in $(cat APP_LANGUAGES.conf)
+do
+    if [[ -n "$LANGUAGE" && \
+        "$LANGUAGE" != "#"* && "$LANGUAGE" != "en" ]]; then
+        ((S1_LANGUAGE_COUNT++))
+        if [[ "$S1_LANGUAGE_COUNT" != "$LANGUAGES_COUNT" ]]; then
+            echo "    \""$LANGUAGE"\"," >> "$OUTPUT_FILE"
+        else
+            echo "    \""$LANGUAGE"\"" >> "$OUTPUT_FILE"
+        fi
+    fi
+done
+
+# 1.4) Finish ALL_LANGUAGES.
+echo "};" >> "$OUTPUT_FILE"
+
+
+##
+# 2.1) Produce for each translation string start:
+#     const QStringList TRANSLATION_SET_0 = {
+#         "The english string.",
+#
+# 2.2) Produce for each translation string:
+#         "de",           -or-
+#         "es",           etc.
+#     but omit the final "," if the last language.
+#
+# 2.3) Produce for each translation string end:
+#     };
+#
+
+# Loop through each string translation set.
+S2_TRANSLATION_SET_COUNT=0
+S2_TRANSLATION_SUBSET_COUNT=0
+
+for APP_STRING in $(cat "$INPUT_FILE")
+do
+    # Output begin.
+    if [[ "$S2_TRANSLATION_SUBSET_COUNT" == "0" ]]; then
+        # 2.1) Produce for each translation string start:
+        echo "const QStringList TRANSLATION_SET_"$S2_TRANSLATION_SET_COUNT\
+            "= {" >> "$OUTPUT_FILE"
+        echo "    "$APP_STRING"," >> "$OUTPUT_FILE"
+        ((S2_TRANSLATION_SUBSET_COUNT++))
+        ((S2_TRANSLATION_SET_COUNT++))
+        continue;
+    fi
+
+    # 2.2) Produce for each translation string:
+    if [[ "$S2_TRANSLATION_SUBSET_COUNT" != "$LANGUAGES_COUNT" ]]; then
+        echo "    \"""$APP_STRING""\"," >> "$OUTPUT_FILE"
+        ((S2_TRANSLATION_SUBSET_COUNT++))
+    else
+        # 2.3) Produce for each translation string end:
+        echo "    \"""$APP_STRING""\"" >> "$OUTPUT_FILE"
+        echo "};" >> "$OUTPUT_FILE"
+        S2_TRANSLATION_SUBSET_COUNT=0
+    fi
+done
+
+
+##
+# 3.1) Produce the translation table start:
+#     const vector<QStringList> ALL_TRANSLATIONS = {
+#
+# 3.2) Produce for each translation set:
+#         TRANSLATION_STRING_0,
+#      but omit the final "," if the last language.
+#
+# 3.3) Produce the translation table end:
+#     };
+#
+
+# 3.1) Produce the translation table start.
+echo "const vector<QStringList> ALL_TRANSLATIONS = {">> \
+    "$OUTPUT_FILE"
+
+# 3.2) Produce for each translation set:
+S3_TRANSLATION_SET_COUNT=0
+((S2_TRANSLATION_SET_COUNT--)) # Ignore extra line.
+
+while true; do
+    if (( "$S3_TRANSLATION_SET_COUNT" < "$S2_TRANSLATION_SET_COUNT" )); then
+        echo "    TRANSLATION_SET_"$S3_TRANSLATION_SET_COUNT"," >> \
+            "$OUTPUT_FILE"
+        ((S3_TRANSLATION_SET_COUNT++))
+    else
+        echo "    TRANSLATION_SET_"$S3_TRANSLATION_SET_COUNT >> \
+            "$OUTPUT_FILE"
+        break;
+    fi
+done
+
+# 3.3) Produce the translation table end:
+echo "};" >> "$OUTPUT_FILE"
+
+
+##
+# Done, restore line read option,
+# copy new file to source folder.
+#
+
+IFS="$INITIAL_IFS"
+
+##
+#
+#
+echo
+echo "Done! Copy the created file to the source folder."
+
+cp "$OUTPUT_FILE" ..

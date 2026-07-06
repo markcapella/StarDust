@@ -1,0 +1,14 @@
+#!/bin/bash
+
+##
+# Script to translate a single string to multi languages.
+#
+
+trans -b -j :de $1
+trans -b -j :es $1
+trans -b -j :fr $1
+trans -b -j :it $1
+trans -b -j :ja $1
+trans -b -j :nl $1
+trans -b -j :pt $1
+trans -b -j :ru $1

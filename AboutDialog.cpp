@@ -6,13 +6,12 @@
  *
  */
 AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
-    setWindowTitle(QString("About ") + QString(APP_NAME));
+    setWindowTitle(I18N("About") + " " + QString(APP_NAME));
     setMinimumWidth(600);
 
     // Create overall container.
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(0);
-    const int FONT_BASE_SIZE = 10;
 
     // App title line.
     QLabel* appTitleLine = new QLabel(QString(APP_NAME), this);
@@ -41,7 +40,7 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     mainLayout->addSpacing(10);
 
     // App description line.
-    QLabel* appDescLine = new QLabel(QString(APP_DESC), this);
+    QLabel* appDescLine = new QLabel(I18N(APP_DESC), this);
     appDescLine->setAlignment(Qt::AlignCenter);
     appDescLine->setWordWrap(true);
     QFont appDescFont = appDescLine->font();
@@ -64,9 +63,9 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
 
     // Credits line.
     QLabel* iconCreditsLine = new QLabel(this);
-    iconCreditsLine->setText("Icon artwork provided by "
-        "<a href=\"https://perchance.org/ai-icon-generator\""
-            ">the Perchance Art Generator</a>");
+    iconCreditsLine->setText(I18N("Icon artwork provided by") +
+        " <a href=\"https://perchance.org/ai-icon-generator\"" +
+        ">" + I18N("Perchance Art Generator") + "</a>");
     iconCreditsLine->setOpenExternalLinks(true);
     iconCreditsLine->setTextInteractionFlags(
         Qt::LinksAccessibleByMouse);
@@ -93,9 +92,9 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
             mainLayout->addWidget(new QLabel(QString(""), this));
             areThereWarningsYet = true;
         }
-        const QString VISUAL_WM_WARNING = "NOTE: Your Window Manager "
+        const QString VISUAL_WM_WARNING = I18N("NOTE: Your Window Manager "
             "(WM) & its Compositor won't allow you to transparently see "
-            "through StickyWidgetIII based widgets.";
+            "through StickyWidgetIII based widgets.");
         QLabel* appVTWarnLine = new QLabel(
             QString(VISUAL_WM_WARNING), this);
         appVTWarnLine->setAlignment(Qt::AlignCenter);
@@ -117,9 +116,9 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
             mainLayout->addSpacing(20);
             areThereWarningsYet = true;
         }
-        const QString POINTER_WM_WARNING = "NOTE: Your Window Manager "
+        const QString POINTER_WM_WARNING = I18N("NOTE: Your Window Manager "
             "(WM) won't allow you to click through StickyWidgetIII "
-            "based widgets.";
+            "based widgets.");
         QLabel* appPTWarnLine = new QLabel(
             QString(POINTER_WM_WARNING), this);
         appPTWarnLine->setAlignment(Qt::AlignCenter);
@@ -141,10 +140,10 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
             mainLayout->addSpacing(20);
             areThereWarningsYet = true;
         }
-        const QString TILING_WM_WARNING = "NOTE: Your Window "
-            "Manager is a Tiling window manager. This may prevent "
+        const QString TILING_WM_WARNING = I18N("NOTE: Your Window Manager "
+            "(WM) is a Tiling window manager. This may prevent "
             "you from seeing or clicking through StickyWidgetIII "
-            "based widgets.";
+            "based widgets.");
         QLabel* appTilingWMLine = new QLabel(
             QString(TILING_WM_WARNING), this);
         appTilingWMLine->setAlignment(Qt::AlignCenter);
@@ -166,9 +165,9 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
             mainLayout->addSpacing(20);
             areThereWarningsYet = true;
         }
-        const QString COMPOSITOR_WARNING = "NOTE: Your Compositor is "
+        const QString COMPOSITOR_WARNING = I18N("NOTE: Your Compositor is "
             "unknown. This may prevent you from seeing or clicking "
-            "through StickyWidgetIII based widgets.";
+            "through StickyWidgetIII based widgets.");
         QLabel* compositorLine = new QLabel(
             QString(COMPOSITOR_WARNING), this);
         compositorLine->setAlignment(Qt::AlignCenter);
@@ -187,9 +186,10 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     mainLayout->addSpacing(7);
 
     // App WM and Compositor summary line.
-    const QString SUMMARY_WM_WARNING = "Your Window Manager is " +
-        THIS_WM_NAME + ", Your Compositor is " +
-        (COMPOSITOR_NAME == "" ? "unknown" : COMPOSITOR_NAME) + ".";
+    const QString SUMMARY_WM_WARNING = I18N("Your Window Manager is") +
+        " " + THIS_WM_NAME + ", " + I18N("Your Compositor is") + " " +
+        (COMPOSITOR_NAME == "" ? I18N("unknown") : COMPOSITOR_NAME) + ".";
+
     QLabel* appSummaryLine = new QLabel(QString(
         SUMMARY_WM_WARNING), this);
     appSummaryLine->setAlignment(Qt::AlignCenter);
@@ -202,10 +202,14 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     // Add blank line before Buttons Box.
     mainLayout->addSpacing(20);
 
-    // Get Buttonbox with Ok button & button to open source Repo.
+    // Create Ok / Cancel ButtonBoxBox with a Repo button.
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok, this);
-    QPushButton* repoButton = new QPushButton("Repo", this);
+
+    QPushButton* okButton = buttonBox->button(QDialogButtonBox::Ok);
+    okButton->setText(I18N("Ok"));
+
+    QPushButton* repoButton = new QPushButton(I18N("Repo"));
     buttonBox->addButton(repoButton, QDialogButtonBox::ActionRole);
 
     // Connect Ok and Repo signals.

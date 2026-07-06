@@ -19,7 +19,7 @@ RecentsHelper::getAppRecentsName() {
 
     int mRecentsFD = lockRecentsProcessInfo();
     if (mRecentsFD == -1) {
-        cout << endl << XCOLOR_RED << "Uunable to start due to "
+        cout << endl << XCOLOR_RED << "Unable to start due to "
             "control file contention. Please try again later." << endl;
         QMessageBox::information(NULL, APP_NAME, "Unable to start due "
             "to control file contention. Please try again later.");
@@ -73,8 +73,8 @@ RecentsHelper::lockRecentsProcessInfo() {
     QDir dir = fileInfo.dir();
     if (!dir.exists()) {
         if (!dir.mkpath(".")) {
-            cout << endl << XCOLOR_RED << "Cannot create local "
-                "folder: " << dir.path().toStdString() << "." << endl;
+            cout << endl << XCOLOR_RED << "Cannot create folder: " <<
+                dir.path().toStdString() << "." << endl;
             return -1;
         }
     }
@@ -87,8 +87,8 @@ RecentsHelper::lockRecentsProcessInfo() {
     int fdLocked = open(recentsFile, O_CREAT | O_RDWR, 0644);
     if (fdLocked == -1) {
         free(recentsFile);
-        cout << endl << "FAIL " << RECENTS_FILE.toStdString() <<
-            "." << endl;
+        cout << endl << "Cannot create file: " <<
+            RECENTS_FILE.toStdString() << "." << endl;
         return -1;
     }
 

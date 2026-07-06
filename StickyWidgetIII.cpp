@@ -39,6 +39,7 @@ XHelper* mXHelper = nullptr;
 
 RecentsHelper* mRecentsHelper = nullptr;
 SettingsHelper* mSettingsHelper = nullptr;
+TranslationHelper* mTranslationHelper = nullptr;
 
 StickyWindow* mStickyWindow = nullptr;
 Canvas* mCanvas = nullptr;
@@ -104,21 +105,22 @@ main(int argc, char** argv) {
         return true;
     }
 
-    // Init Font global, Settings & App & Png Helpers.
+    // After RecentsHelper, do SettingsHelper, TranslationHelper &
+    // Png Helpers.
     mSettingsHelper = new SettingsHelper();
     mSettingsHelper->ensureSettingsAreConfigurable();
-
+    mTranslationHelper = new TranslationHelper();
     initAppPngImages();
 
+    // Run main window.
     mStickyWindow = new StickyWindow();
     if (mStickyWindow->getX11Window() != None) {
         mStickyWindow->run();
     }
-
     delete mStickyWindow;
-    delete mSettingsHelper;
-    delete mRecentsHelper;
 
+    delete mTranslationHelper;
+    delete mSettingsHelper;
     sanitizeGlobals();
     return false;
 }
@@ -183,6 +185,7 @@ initAppPngImages() {
  * This method sanitizes global members after use.
  */
 void sanitizeGlobals() {
+    delete mRecentsHelper;
     delete mXHelper;
 
     XCloseDisplay(mDisplay);

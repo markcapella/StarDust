@@ -1,0 +1,68 @@
+
+# CMakeLists.txt strings :
+A colorful deep star field that twinkles and slowly changes on your desktop.
+
+# AboutDialog strings :
+About
+Icon artwork provided by
+Perchance Art Generator
+NOTE: Your Window Manager (WM) & its Compositor won't allow you to transparently see through StickyWidgetIII based widgets.
+NOTE: Your Window Manager (WM) won't allow you to click through StickyWidgetIII based widgets.
+NOTE: Your Window Manager (WM) is a Tiling window manager. This may prevent you from seeing or clicking through StickyWidgetIII based widgets.
+NOTE: Your Compositor is unknown. This may prevent you from seeing or clicking through StickyWidgetIII based widgets.
+Your Window Manager is
+Your Compositor is
+unknown
+Repo
+
+# ConfigDialog strings :
+Settings
+
+# SettingsHelper strings :
+Language
+Auto hide Controls
+Auto hide Delay
+Preferred Desktop
+Allow Desktop Drag
+Stick to Top
+Background Color
+Background Opacity
+Maximum Star Size
+Starfield Saturation
+Size Change Delay
+Position Change Delay
+Color Change Delay
+Star Color Cool
+Star Color Warm
+Star Color Medium
+Star Color Hot
+
+# All hints strings :
+seconds
+All
+Desktop
+pixels
+
+# Recents Names:
+one
+two
+three
+four
+five
+six
+seven
+eight
+
+# StickyWindow Error message strings :
+Visual transparency unavailable with this Desktop, Fatal.
+X11 failed to create a window, Fatal.
+Failed to query Cursor location.
+
+# DisplayHelper Error message strings :
+Wayland Display Manager is detected, Fatal.
+No X11 Session type is detected, Fatal.
+X11 Display not available (Are you Wayland?), Fatal.
+
+# StickyWidgetIII Error message strings :
+# RecentsHelper Error message strings :
+Can't be translated due to code flow.

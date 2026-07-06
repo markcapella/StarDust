@@ -1,0 +1,34 @@
+#!/bin/bash
+
+##
+# getTranslatedAppStrings.
+#
+
+# Read lines, not fields.
+INITIAL_IFS="$IFS"
+IFS=$'\n'
+
+# Pre-clear output file.
+echo > APP_STRINGS_TRANSLATED.txt
+
+# Loop through each string.
+for APP_STRING in $(cat APP_STRINGS.txt)
+do
+    # Output string in english, followed by translation into
+    # each requested language.
+    echo "\"""$APP_STRING""\"" >> APP_STRINGS_TRANSLATED.txt
+
+    for LANGUAGE in $(cat APP_LANGUAGES.conf)
+    do
+        if [[ -n "$LANGUAGE" && \
+            "$LANGUAGE" != "#"* && "$LANGUAGE" != "en" ]]; then
+            # Output the conversion.
+            trans -engine bing -b -j :$LANGUAGE $APP_STRING >> \
+                APP_STRINGS_TRANSLATED.txt
+        fi
+    done
+done
+
+##
+# Done, restore line read option.
+IFS="$INITIAL_IFS"

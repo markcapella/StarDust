@@ -12,7 +12,8 @@ enum SettingsPropertyType {
     BOOL_VALUETYPE,
     COLOR_VALUETYPE,
     SLIDER_VALUETYPE,
-    DIVIDER_VALUETYPE
+    DIVIDER_VALUETYPE,
+    COMBOBOX_VALUETYPE
 };
 
 class SettingsHelper {
@@ -20,23 +21,28 @@ class SettingsHelper {
 
     public:
         // Configurable.
-        IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
-        IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
+        IC_QString APP_LANGUAGE = "Language";
+        IC_QString DIVIDER_0 = "divider00";
+
         IC_QString PREFERRED_DESKTOP = "Preferred Desktop";
         IC_QString ALLOW_DESKTOP_DRAG = "Allow Desktop Drag";
         IC_QString ON_TOP_INSTEAD = "Stick to Top";
         IC_QString DIVIDER_1 = "divider01";
 
+        IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
+        IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
         IC_QString BACKGROUND_COLOR = "Background Color";
         IC_QString BACKGROUND_OPACITY = "Background Opacity";
-        IC_QString MAX_STAR_SIZE = "Maximum Star Size";
-        IC_QString STAR_SATURATION = "Starfield Saturation";
         IC_QString DIVIDER_2 = "divider02";
+
+        IC_QString MAX_STAR_SIZE = "Star Size Maximum";
+        IC_QString STAR_SATURATION = "Starfield Saturation";
+        IC_QString DIVIDER_3 = "divider03";
 
         IC_QString SIZE_CHANGE_DELAY = "Size Change Delay";
         IC_QString POSITION_CHANGE_DELAY = "Position Change Delay";
         IC_QString COLOR_CHANGE_DELAY = "Color Change Delay";
-        IC_QString DIVIDER_3 = "divider03";
+        IC_QString DIVIDER_4 = "divider04";
 
         IC_QString STAR_COLOR_COOL = "Star Color Cool";
         IC_QString STAR_COLOR_WARM = "Star Color Warm";
@@ -53,17 +59,19 @@ class SettingsHelper {
             int rangeMaximum = numeric_limits<int>::max();
         };
 
+        // App configurables. Entries determine order of
+        // appearance in Dialog.
         static inline const vector<SettingsProperty> PROPERTIES = {
-            // App configurables.
-            { .name = AUTOHIDE_CONTROLS,
-              .valueType = BOOL_VALUETYPE, .initialValue = "false",
+            { .name = APP_LANGUAGE,
+              .valueType = COMBOBOX_VALUETYPE, .initialValue = "en",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .name = AUTOHIDE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "4",
-              .rangeMinimum = 1, .rangeMaximum = 9
+            { .name = DIVIDER_0,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
             },
 
             { .name = PREFERRED_DESKTOP,
@@ -85,9 +93,20 @@ class SettingsHelper {
             },
 
             { .name = DIVIDER_1,
-              .valueType = DIVIDER_VALUETYPE, .initialValue = "10",
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = AUTOHIDE_CONTROLS,
+              .valueType = BOOL_VALUETYPE, .initialValue = "false",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = AUTOHIDE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "4",
+              .rangeMinimum = 1, .rangeMaximum = 9
             },
 
             { .name = BACKGROUND_COLOR,
@@ -101,6 +120,12 @@ class SettingsHelper {
               .rangeMinimum = 0, .rangeMaximum = 255
             },
 
+            { .name = DIVIDER_2,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "10",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
             { .name = MAX_STAR_SIZE,
               .valueType = SLIDER_VALUETYPE, .initialValue = "15",
               .rangeMinimum = 5, .rangeMaximum = 40
@@ -111,7 +136,7 @@ class SettingsHelper {
               .rangeMinimum = 5, .rangeMaximum = 100
             },
 
-            { .name = DIVIDER_2,
+            { .name = DIVIDER_3,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
@@ -132,7 +157,7 @@ class SettingsHelper {
               .rangeMinimum = 1, .rangeMaximum = 2000
             },
 
-            { .name = DIVIDER_3,
+            { .name = DIVIDER_4,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
@@ -225,19 +250,24 @@ class SettingsHelper {
         void setBoolSetting(const QString setting, const bool value);
 
         /**
-         * Getter for user configurable int settings.
+         * Getters & setters for user configurable int settings.
          */
         int getIntSetting(const QString setting);
 
-        /**
-         * Setter for user configurable int settings.
-         */
-        void setIntSetting(const QString setting, int value);
+        void setIntSetting(const QString setting, const int value);
 
         /**
-         * Getters & setters for user configurable XRenderColor settings.
+         * Getter for user configurable XRenderColor settings.
          */
         XRenderColor getColorSetting(const QString setting);
+
+        /**
+         * Getters & setters for user configurable string settings.
+         */
+        QString getStringSetting(const QString setting);
+
+        void setStringSetting(const QString setting,
+            const QString value);
 
         /**
          * Each runtime start we ensure Settings keys & default values

@@ -155,27 +155,7 @@ SettingsHelper::setConfigMode(const bool state) {
 }
 
 /**
- * Each runtime start we ensure Settings keys & default values
- * are flushed to .ini file for ConfigDialog to load & modify.
- */
-void
-SettingsHelper::ensureSettingsAreConfigurable() {
-    const int INITIAL_SETTINGS_SIZE = PROPERTIES.size();
-
-    for (int i = 0; i < INITIAL_SETTINGS_SIZE; i++) {
-        const SettingsProperty property = PROPERTIES[i];
-        const QVariant SETTING_VARIANT =
-            getQSettings()->value(property.name);
-        if (!SETTING_VARIANT.isValid()) {
-            getQSettings()->setValue(property.name, property.initialValue);
-        }
-    }
-
-    mSettingsHelper->getQSettings()->sync();
-}
-
-/**
- * Getter for user configurable bool settings.
+ * Getters & setters for user configurable bool settings.
  */
 bool
 SettingsHelper::getBoolSetting(const QString setting) {
@@ -184,9 +164,6 @@ SettingsHelper::getBoolSetting(const QString setting) {
     return RESULT;
 }
 
-/**
- * Setter for user configurable bool settings.
- */
 void
 SettingsHelper::setBoolSetting(const QString setting,
     const bool value) {
@@ -194,7 +171,7 @@ SettingsHelper::setBoolSetting(const QString setting,
 }
 
 /**
- * Getter for user configurable int settings.
+ * Getters & setters for user configurable int settings.
  */
 int
 SettingsHelper::getIntSetting(const QString setting) {
@@ -203,12 +180,9 @@ SettingsHelper::getIntSetting(const QString setting) {
     return RESULT;
 }
 
-/**
- * Setter for user configurable int settings.
- */
 void
 SettingsHelper::setIntSetting(const QString setting,
-    int value) {
+    const int value) {
     getQSettings()->setValue(setting, value);
 }
 
@@ -226,6 +200,42 @@ SettingsHelper::getColorSetting(const QString setting) {
     xColor.blue  = (COLOR.blue() << 8) | 0xff;
     xColor.alpha = (COLOR.alpha() << 8) | 0xff;
     return xColor;
+}
+
+/**
+ * Getters & setters for user configurable string settings.
+ */
+QString
+SettingsHelper::getStringSetting(const QString setting) {
+    const QString RESULT = getQSettings()->value(setting,
+        getSettingsDefaultValue(setting)).toString();
+    return RESULT;
+}
+
+void
+SettingsHelper::setStringSetting(const QString setting,
+    const QString value) {
+    getQSettings()->setValue(setting, value);
+}
+
+/**
+ * Each runtime start we ensure Settings keys & default values
+ * are flushed to .ini file for ConfigDialog to load & modify.
+ */
+void
+SettingsHelper::ensureSettingsAreConfigurable() {
+    const int INITIAL_SETTINGS_SIZE = PROPERTIES.size();
+
+    for (int i = 0; i < INITIAL_SETTINGS_SIZE; i++) {
+        const SettingsProperty property = PROPERTIES[i];
+        const QVariant SETTING_VARIANT =
+            getQSettings()->value(property.name);
+        if (!SETTING_VARIANT.isValid()) {
+            getQSettings()->setValue(property.name, property.initialValue);
+        }
+    }
+
+    mSettingsHelper->getQSettings()->sync();
 }
 
 /**

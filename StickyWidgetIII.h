@@ -78,6 +78,7 @@ extern XHelper* mXHelper;
 
 extern RecentsHelper* mRecentsHelper;
 extern SettingsHelper* mSettingsHelper;
+extern TranslationHelper* mTranslationHelper;
 
 extern StickyWindow* mStickyWindow;
 extern Canvas* mCanvas;
