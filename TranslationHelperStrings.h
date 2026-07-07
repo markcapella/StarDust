@@ -625,6 +625,10 @@ const QStringList TRANSLATION_SET_56 = { "Cancel",
     "キャンセル", "Annuleren", "Cancelar", "Отмена"
 };
 
+const QStringList TRANSLATION_SET_57 = { "Apply",
+    "Anwenden", "Aplicar", "Appliquer", "Fare domanda a",
+    "適用する", "Toepassen", "Aplicar", "Применять"
+};
 
 /**
  * One big set of Translation Sets.
@@ -686,5 +690,6 @@ const vector<QStringList> ALL_TRANSLATIONS = {
     TRANSLATION_SET_53,
     TRANSLATION_SET_54,
     TRANSLATION_SET_55,
-    TRANSLATION_SET_56
+    TRANSLATION_SET_56,
+    TRANSLATION_SET_57
 };

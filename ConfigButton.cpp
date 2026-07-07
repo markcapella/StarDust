@@ -77,8 +77,8 @@ ConfigButton::click(const Window window) {
 
     // Build the UI form layout & open it.
     mConfigDialog->setWindow(window);
-    mConfigDialog->translateConfigDialogControls();
-    mConfigDialog->loadConfigDialogControls();
+    mConfigDialog->translateConfigDialog();
+    mConfigDialog->loadConfigDialog();
 
     mConfigDialog->show();
     mConfigDialog->raise();
@@ -97,5 +97,5 @@ ConfigButton::updateDialog() {
         return;
     }
 
-    mConfigDialog->updateConfigDialogControls();
+    mConfigDialog->updateConfigDialog();
 }

@@ -890,8 +890,8 @@ StickyWindow::updateActiveConfigDialog() {
 }
 
 /**
- * Receives an event from Qt ConfigDialog that it has
- * completed with new user config settings.
+ * Receives an event from Qt ConfigDialog that
+ * it needs to redraw canvas.
  */
 void
 StickyWindow::receiveConfigDialogUpdatedEvent() {

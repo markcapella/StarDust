@@ -220,14 +220,14 @@ const QStringList TRANSLATION_SET_18 = {
     "Иконка предоставлена"
 };
 const QStringList TRANSLATION_SET_19 = {
-    "Maximum Star Size",
+    "Star Size Maximum",
     "Maximale Sterngröße",
     "Tamaño máximo de estrella",
-    "Taille maximale de l'étoile",
-    "Dimensione massima della stella",
-    "最大の星の大きさ",
-    "Maximale Stergrootte",
-    "Tamanho Máximo da Estrela",
+    "Taille maximale des étoiles",
+    "Dimensione stella massima",
+    "スターサイズの最大値",
+    "Maximale stergrootte",
+    "Tamanho máximo da estrela",
     "Максимальный размер звезды"
 };
 const QStringList TRANSLATION_SET_20 = {
@@ -625,6 +625,10 @@ const QStringList TRANSLATION_SET_56 = { "Cancel",
     "キャンセル", "Annuleren", "Cancelar", "Отмена"
 };
 
+const QStringList TRANSLATION_SET_57 = { "Apply",
+    "Anwenden", "Aplicar", "Appliquer", "Fare domanda a",
+    "適用する", "Toepassen", "Aplicar", "Применять"
+};
 
 /**
  * One big set of Translation Sets.
@@ -686,5 +690,6 @@ const vector<QStringList> ALL_TRANSLATIONS = {
     TRANSLATION_SET_53,
     TRANSLATION_SET_54,
     TRANSLATION_SET_55,
-    TRANSLATION_SET_56
+    TRANSLATION_SET_56,
+    TRANSLATION_SET_57
 };

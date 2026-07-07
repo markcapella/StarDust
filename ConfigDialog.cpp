@@ -7,7 +7,6 @@
  * Simple class to represent a ConfigDialog.
  */
 ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
-    // Set the window attributes.
     setWindowFlags(Qt::Dialog | Qt::Tool);
     resize(CONFIG_DIALOG_WIDTH, CONFIG_DIALOG_HEIGHT);
     setFixedSize(size());
@@ -24,7 +23,7 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle(QString(TITLE));
 
     // Add the formlayout to a formcontainer.
-    createFormLayout();
+    createConfigDialog();
     mFormLayout->setFormAlignment(Qt::AlignCenter);
 
     // Add form layout to a container.
@@ -40,41 +39,55 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
     mMainLayout = new QVBoxLayout(this);
     mMainLayout->addWidget(scrollArea);
 
-    // Create Ok / Cancel ButtonBoxBox with an About button.
-    mConfigButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok |
-        QDialogButtonBox::Cancel, this);
+    // Create Buttons Layout.
+    QHBoxLayout* mButtonLayout = new QHBoxLayout();
+    mButtonLayout->addStretch();
 
-    mOkButton = mConfigButtonBox->button(QDialogButtonBox::Ok);
-    mOkButton->setText(I18N("Ok"));
+    // Create all buttons for the layout.
+    mOkButton = new QPushButton(I18N("Ok"), this);
+    mApplyButton = new QPushButton(I18N("Apply"), this);
+    mAboutButton = new QPushButton(I18N("About"), this);
+    mCancelButton = new QPushButton(I18N("Cancel"), this);
 
-    mCancelButton = mConfigButtonBox->button(QDialogButtonBox::Cancel);
-    mCancelButton->setText(I18N("Cancel"));
+    // Ensure nothing defaults to having focus.
+    mOkButton->setAutoDefault(false);
+    mApplyButton->setAutoDefault(false);
+    mAboutButton->setAutoDefault(false);
+    mCancelButton->setAutoDefault(false);
 
-    mAboutButton = new QPushButton(I18N("About"));
-    mConfigButtonBox->addButton(mAboutButton, QDialogButtonBox::ActionRole);
+    // Add all buttons to the layout.
+    mButtonLayout->addWidget(mOkButton);
+    mButtonLayout->addWidget(mApplyButton);
+    mButtonLayout->addWidget(mAboutButton);
+    mButtonLayout->addWidget(mCancelButton);
 
-    // Callbacks.
-    connect(mConfigButtonBox, &QDialogButtonBox::accepted, this,
-        &ConfigDialog::acceptConfigDialogControls);
-    connect(mConfigButtonBox, &QDialogButtonBox::rejected, this,
-        &ConfigDialog::reject);
+    // Connect all button click signals.
+    connect(mOkButton, &QPushButton::clicked, this,
+        &ConfigDialog::okConfigDialog);
+    connect(mApplyButton, &QPushButton::clicked, this,
+        &ConfigDialog::acceptConfigDialog);
     connect(mAboutButton, &QPushButton::clicked, this,
-        &ConfigDialog::about);
+        &ConfigDialog::showAboutDialog);
+    connect(mCancelButton, &QPushButton::clicked, this,
+        &ConfigDialog::reject);
+
+    // Add buttons widget to layout & set as Layout.
+    mMainLayout->addLayout(mButtonLayout);
+    setLayout(mMainLayout);
+
+    // Init settings change list, size / value.
+    mSettingChanges.fill(false, SettingsHelper::PROPERTIES.size());
 
     // X11 message Atoms.
     mConfigDialogUpdated = XInternAtom(mDisplay,
         CONFIG_DIALOG_UPDATED_EVENT.c_str(), False);
-
-    // Set mMainLayout as "the Layout" & done.
-    mMainLayout->addWidget(mConfigButtonBox);
-    setLayout(mMainLayout);
 }
 
 /**
  * Translate Settings to desired language for display.
  */
 void
-ConfigDialog::translateConfigDialogControls() {
+ConfigDialog::translateConfigDialog() {
     // Set the window title.
     const QString FIRST_RECENTS_NAME = mRecentsHelper->RECENTS_NAMES[0];
     const QString APP_RECENT_NAME = mRecentsHelper->getAppRecentsName();
@@ -112,15 +125,21 @@ ConfigDialog::translateConfigDialogControls() {
     }
 
     mOkButton->setText(I18N("Ok"));
+    mApplyButton->setText(I18N("Apply"));
     mCancelButton->setText(I18N("Cancel"));
     mAboutButton->setText(I18N("About"));
+
+    mOkButton->clearFocus();
+    mApplyButton->clearFocus();
+    mAboutButton->clearFocus();
+    mCancelButton->clearFocus();
 }
 
 /**
  * Load UI form with values from .Ini.
  */
 void
-ConfigDialog::loadConfigDialogControls() {
+ConfigDialog::loadConfigDialog() {
 
     const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
     for (int i = 0; i < FORM_LAYOUT_SIZE; ++i) {
@@ -221,13 +240,17 @@ ConfigDialog::loadConfigDialogControls() {
             continue;
         }
     }
+
+    // Init Apply button after load.
+    mSettingChanges.fill(false);
+    mApplyButton->setEnabled(false);
 }
 
 /**
  * Update any runtime dialog controls, range settings, etc.
  */
 void
-ConfigDialog::updateConfigDialogControls() {
+ConfigDialog::updateConfigDialog() {
 
     const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
     for (int i = 0; i < FORM_LAYOUT_SIZE; ++i) {
@@ -236,11 +259,6 @@ ConfigDialog::updateConfigDialogControls() {
         const QString THIS_KEY = THIS_SETTING.name;
         const SettingsPropertyType THIS_VALUETYPE =
             THIS_SETTING.valueType;
-
-        // Ignore Divider lines.
-        if (THIS_VALUETYPE == DIVIDER_VALUETYPE) {
-            continue;
-        }
 
         // Reset desktop preference slider for 2 reasons.
         if (THIS_KEY == SettingsHelper::PREFERRED_DESKTOP) {
@@ -264,6 +282,10 @@ ConfigDialog::updateConfigDialogControls() {
                     mSettingsHelper->SettingsHelper::PREFERRED_DESKTOP);
                 if (SLIDER_CURRENT != VALUE_CURRENT) {
                     sliderEditWidget->setSliderPosition(VALUE_CURRENT);
+                    mSettingChanges[i] = false;
+                    const bool APPLY_BUTTON_ENABLED =
+                        mSettingChanges.contains(true);
+                    mApplyButton->setEnabled(APPLY_BUTTON_ENABLED);
                 }
             }
         }
@@ -274,7 +296,7 @@ ConfigDialog::updateConfigDialogControls() {
  * Build the UI form layout.
  */
 void
-ConfigDialog::createFormLayout() {
+ConfigDialog::createConfigDialog() {
     // Build form.
     mFormLayout = new QFormLayout();
     mFormLayout->setContentsMargins(0, FORM_TOP_BOTTOM_SPACING,
@@ -306,6 +328,11 @@ ConfigDialog::createFormLayout() {
             stringEditWidget->setObjectName(THIS_KEY);
             stringEditWidget->setFixedWidth(360);
             mFormLayout->addRow(I18N_DISPLAY_KEY, stringEditWidget);
+            connect(stringEditWidget, &QLineEdit::textChanged,
+                this, [this, i] (const QString &text) {
+                mSettingChanges[i] = true;
+                mApplyButton->setEnabled(true);
+            });
             continue;
         }
 
@@ -315,6 +342,11 @@ ConfigDialog::createFormLayout() {
             lineEditWidget->setObjectName(THIS_KEY);
             lineEditWidget->setFixedWidth(120);
             mFormLayout->addRow(I18N_DISPLAY_KEY, lineEditWidget);
+            connect(lineEditWidget, &QLineEdit::textChanged,
+                this, [this, i] (const QString &text) {
+                mSettingChanges[i] = true;
+                mApplyButton->setEnabled(true);
+            });
             continue;
         }
 
@@ -323,6 +355,11 @@ ConfigDialog::createFormLayout() {
             QCheckBox* checkboxWidget = new QCheckBox(this);
             checkboxWidget->setObjectName(THIS_KEY);
             mFormLayout->addRow(I18N_DISPLAY_KEY, checkboxWidget);
+            connect(checkboxWidget, &QCheckBox::toggled,
+                this, [this, i] (bool checked) {
+                mSettingChanges[i] = true;
+                mApplyButton->setEnabled(true);
+            });
             continue;
         }
 
@@ -332,6 +369,11 @@ ConfigDialog::createFormLayout() {
                 THIS_KEY, this);
             colorButtonWidget->setObjectName(THIS_KEY);
             mFormLayout->addRow(I18N_DISPLAY_KEY, colorButtonWidget);
+            connect(colorButtonWidget, &ColorButton::colorChanged,
+                this, [this, i] (const QColor &color) {
+                mSettingChanges[i] = true;
+                mApplyButton->setEnabled(true);
+            });
             continue;
         }
 
@@ -345,11 +387,13 @@ ConfigDialog::createFormLayout() {
             // Nice tooltip on slow hover.
             if (THIS_KEY == SettingsHelper::AUTOHIDE_DELAY) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     const QString TOOLTIP_TEXT = QString::number(value) +
                         " " + I18N("seconds");
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new AutoHideDelayHints(sliderEditWidget));
@@ -362,7 +406,7 @@ ConfigDialog::createFormLayout() {
                 sliderEditWidget->setTickPosition(QSlider::TicksBelow);
                 sliderEditWidget->setStyle(QStyleFactory::create("Fusion"));
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     // Use the calculated center of the slider for
                     // ToolTip, as updates happen during window drag and
                     // pointer is nowhere near the slider at that point.
@@ -375,6 +419,8 @@ ConfigDialog::createFormLayout() {
                         QString::number(value + 1);
                     QToolTip::showText(GLOBAL_POSITION, TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new DesktopPreferenceHints(sliderEditWidget));
@@ -383,12 +429,14 @@ ConfigDialog::createFormLayout() {
 
             if (THIS_KEY == SettingsHelper::BACKGROUND_OPACITY) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     const int VALUE_PCT = 100 * value / 255;
                     const QString TOOLTIP_TEXT =
                         QString::number(VALUE_PCT) + "%";
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new OpacityHints(sliderEditWidget));
@@ -397,11 +445,13 @@ ConfigDialog::createFormLayout() {
 
             if (THIS_KEY == SettingsHelper::STAR_SATURATION) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     const QString TOOLTIP_TEXT =
                         QString::number(value) + "%";
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new SaturationHints(sliderEditWidget));
@@ -410,11 +460,13 @@ ConfigDialog::createFormLayout() {
 
             if (THIS_KEY == SettingsHelper::MAX_STAR_SIZE) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     const QString TOOLTIP_TEXT = QString::number(value) +
                         " " + I18N("pixels");
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new MaxStarSizeHints(sliderEditWidget));
@@ -423,11 +475,13 @@ ConfigDialog::createFormLayout() {
 
             if (THIS_KEY == SettingsHelper::COLOR_CHANGE_DELAY) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     const QString TOOLTIP_TEXT =
                         QString::number(value);
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new ColorChangeRateHints(sliderEditWidget));
@@ -436,11 +490,13 @@ ConfigDialog::createFormLayout() {
 
             if (THIS_KEY == SettingsHelper::SIZE_CHANGE_DELAY) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     const QString TOOLTIP_TEXT =
                         QString::number(value);
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new SizeChangeRateHints(sliderEditWidget));
@@ -449,11 +505,13 @@ ConfigDialog::createFormLayout() {
 
             if (THIS_KEY == SettingsHelper::POSITION_CHANGE_DELAY) {
                 connect(sliderEditWidget, &QSlider::valueChanged,
-                    sliderEditWidget, [sliderEditWidget] (int value) {
+                    this, [this, i, sliderEditWidget] (int value) {
                     const QString TOOLTIP_TEXT =
                         QString::number(value);
                     QToolTip::showText(QCursor::pos(), TOOLTIP_TEXT,
                         sliderEditWidget);
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
                 });
                 sliderEditWidget->installEventFilter(
                     new PositionChangeRateHints(sliderEditWidget));
@@ -468,16 +526,34 @@ ConfigDialog::createFormLayout() {
             langComboWidget->addItems(ALL_LANGUAGES);
             langComboWidget->setObjectName(THIS_KEY);
             mFormLayout->addRow(I18N_DISPLAY_KEY, langComboWidget);
+            connect(langComboWidget,&QComboBox::currentIndexChanged,
+                this, [this, i] (int index) {
+                mSettingChanges[i] = true;
+                mApplyButton->setEnabled(true);
+            });
             continue;
         }
     }
 }
 
 /**
- * Callback to Save UI form values to .Ini.
+ * Called on Ok button of Dialog clicked.
  */
 void
-ConfigDialog::acceptConfigDialogControls() {
+ConfigDialog::okConfigDialog() {
+
+    acceptConfigDialog();
+    accept();
+}
+
+/**
+ * Called on Accept button of Dialog clicked.
+ */
+void
+ConfigDialog::acceptConfigDialog() {
+    if (!mSettingChanges.contains(true)) {
+        return;
+    }
 
     const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
     for (int i = 0; i < FORM_LAYOUT_SIZE; ++i) {
@@ -571,16 +647,35 @@ ConfigDialog::acceptConfigDialogControls() {
         }
     }
 
-    // Signal X11 thread we're updated.
-    sendConfigDialogUpdatedEvent();
+    // Signal X11 thread we're updated with a settings
+    // change that needs a canvas redraw. We use shorthand
+    // "Any changed setting in PROPERTIES list starting from
+    // background color forces canvas redraw".
+    const int SETTINGS_SIZE = SettingsHelper::PROPERTIES.size();
+    for (int index = 0; index < SETTINGS_SIZE; index++) {
+        const SettingsHelper::SettingsProperty THIS_SETTING =
+            SettingsHelper::PROPERTIES[index];
+        if (THIS_SETTING.name == SettingsHelper::BACKGROUND_COLOR) {
+            for (; index < SETTINGS_SIZE; index++) {
+                if (mSettingChanges[index] == true) {
+                    sendConfigDialogUpdatedEvent();
+                    break;
+                }
+            }
+        }
+    }
 
-    // And done.
-    accept();
+    // Translate controls to new lang for next time.
+    translateConfigDialog();
+
+    // Done.
+    mSettingChanges.fill(false);
+    mApplyButton->setEnabled(false);
 }
 
 /**
- * Send an event to the X11 thread telling it to update
- * with new user config settings.
+ * Send an event to the X11 thread telling it to redraw
+ * canvas with new user config settings.
  */
 void
 ConfigDialog::sendConfigDialogUpdatedEvent() {
@@ -600,7 +695,7 @@ ConfigDialog::sendConfigDialogUpdatedEvent() {
  * Show this apps "About" dialog.
  */
 void
-ConfigDialog::about() {
+ConfigDialog::showAboutDialog() {
 
     mAboutDialog = new AboutDialog(this);
     mAboutDialog->show();

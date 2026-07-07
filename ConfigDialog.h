@@ -29,12 +29,12 @@ class ConfigDialog : public QDialog {
         /**
          * Translate Settings to desired language for display.
          */
-        void translateConfigDialogControls();
+        void translateConfigDialog();
 
         /**
          * Load UI form with values from .Ini.
          */
-        void loadConfigDialogControls();
+        void loadConfigDialog();
 
         /**
          * Gettters / Setters for window.
@@ -49,31 +49,39 @@ class ConfigDialog : public QDialog {
         /**
          * Update any runtime dialog controls, range settings, etc.
          */
-        void updateConfigDialogControls();
+        void updateConfigDialog();
 
     private:
         Window mWindow = None;
-        Atom mConfigDialogUpdated{};
 
         QFormLayout* mFormLayout = nullptr;
         QVBoxLayout* mMainLayout = nullptr;
 
         QDialogButtonBox* mConfigButtonBox = nullptr;
         QPushButton* mOkButton = nullptr;
+        QPushButton* mApplyButton = nullptr;
         QPushButton* mCancelButton = nullptr;
         QPushButton* mAboutButton = nullptr;
+
+        QList<bool> mSettingChanges;
+        Atom mConfigDialogUpdated{};
 
         QDialog* mAboutDialog = nullptr;
 
         /**
          * Build the UI form layout.
          */
-        void createFormLayout();
+        void createConfigDialog();
 
         /**
-         * Callback to Save UI form values to .Ini.
+         * Called on Ok button of Dialog clicked.
          */
-        void acceptConfigDialogControls();
+        void okConfigDialog();
+
+        /**
+         * Called on Accept button of Dialog clicked.
+         */
+        void acceptConfigDialog();
 
         /**
          * Send an event to the X11 thread telling it to update
@@ -84,5 +92,5 @@ class ConfigDialog : public QDialog {
         /**
          * Show this apps "About" dialog.
          */
-        void about();
+        void showAboutDialog();
 };

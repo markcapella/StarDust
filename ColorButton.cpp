@@ -48,11 +48,9 @@ ColorButton::openColorPicker() {
 void
 ColorButton::setButtonColor(const QColor& color) {
     if (color.isValid()) {
-        //if (mColor != color) {
-            mColor = color;
-            updateButtonStyle();
-            // emit colorChanged(mColor);
-        //}
+        mColor = color;
+        updateButtonStyle();
+        emit colorChanged(mColor);
     }
 }
 

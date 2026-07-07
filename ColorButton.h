@@ -31,6 +31,9 @@ class ColorButton : public QPushButton {
          */
         void setButtonColor(const QColor& color);
 
+    signals:
+        void colorChanged(const QColor &newColor);
+
     private:
         QString mTitle;
 
