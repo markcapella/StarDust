@@ -14,7 +14,7 @@ set(APP_NAME "StarDust")
 set(APP_DESC "A colorful deep star field that twinkles and")
 set(APP_DESC "${APP_DESC} slowly changes on your desktop.")
 
-set(APP_VERSION "26.07.07")
+set(APP_VERSION "26.07.08")
 set(APP_VERSION_MINOR "00")
 
 set(APP_AUTHOR "Mark James Capella")
@@ -172,10 +172,10 @@ target_link_libraries(${WIDGET_PROJECT} PRIVATE
 #
 # Debug #2.
 #
-#target_compile_options(${WIDGET_PROJECT} PUBLIC
-#    -g -O1 -fsanitize=address -fno-omit-frame-pointer)
-#target_link_options(${WIDGET_PROJECT} PUBLIC
-#    -fsanitize=address)
+# target_compile_options(${WIDGET_PROJECT} PUBLIC
+#     -g -O1 -fsanitize=address -fno-omit-frame-pointer)
+# target_link_options(${WIDGET_PROJECT} PUBLIC
+#     -fsanitize=address)
 
 ##
 # Prevent sudo make install before make.

@@ -33,12 +33,6 @@ StickyWindow::StickyWindow() {
         [this] () {
         setConfigModeOff();
     });
-
-    // Define any X11 message Atoms.
-    mDeleteMessage = XInternAtom(mDisplay,
-        "WM_DELETE_WINDOW", False);
-    mConfigDialogUpdated = XInternAtom(mDisplay,
-        CONFIG_DIALOG_UPDATED_EVENT.c_str(), False);
 }
 
 /**
@@ -273,7 +267,7 @@ StickyWindow::createX11Window() {
     XSelectInput(mDisplay, mX11Window, OBSERVABLE_EVENTS);
     XSelectInput(mDisplay, DefaultRootWindow(mDisplay),
         PropertyChangeMask);
-    XSetWMProtocols(mDisplay, mX11Window, &mDeleteMessage, 1);
+    XSetWMProtocols(mDisplay, mX11Window, &mCloseAppMessage, 1);
 
     // Set procID on our window, for RecentsHelper().
     mXHelper->setWindowPID(mX11Window);
@@ -738,14 +732,16 @@ StickyWindow::handleX11EventQueue() {
 
             // ClientMsg says window close.
             case ClientMessage:
+                // Our window needs updating with Config changes.
+                if (event.xclient.message_type == mConfigUpdated) {
+                    receiveConfigDialogUpdatedEvent(
+                        event.xclient.data.l[0] ? true : false);
+                    break;
+                }
                 // Our window wants close.
                 if (static_cast<Atom>(event.xclient.data.l[0]) ==
-                    mDeleteMessage) {
+                    mCloseAppMessage) {
                     return true;
-                }
-                // Our window needs updating with Config changes.
-                if (event.xclient.message_type == mConfigDialogUpdated) {
-                    receiveConfigDialogUpdatedEvent();
                 }
                 break;
 
@@ -894,14 +890,18 @@ StickyWindow::updateActiveConfigDialog() {
  * it needs to redraw canvas.
  */
 void
-StickyWindow::receiveConfigDialogUpdatedEvent() {
+StickyWindow::receiveConfigDialogUpdatedEvent(
+    const bool canvasNeedsRedraw) {
+
     setControlButtonsVisibility();
     setWindowStickPosition();
     rangeCheckPreferredDesktopSetting();
 
-    mCanvas->eraseCanvas();
-    mCanvas->uninitCanvas();
-    draw();
+    if (canvasNeedsRedraw) {
+        mCanvas->eraseCanvas();
+        mCanvas->uninitCanvas();
+        draw();
+    }
 }
 
 /**

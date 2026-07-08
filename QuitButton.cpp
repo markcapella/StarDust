@@ -67,18 +67,16 @@ QuitButton::erase(const Window window) {
  */
 void
 QuitButton::click(const Window window) {
-    const Atom WM_PROTOCOLS = XInternAtom(mDisplay,
-        "WM_PROTOCOLS", False);
-    const Atom WM_DELETE_WINDOW = XInternAtom(mDisplay,
-        "WM_DELETE_WINDOW", False);
 
-    XEvent event{}; 
+    XEvent event{};
     event.xclient.type = ClientMessage;
-    event.xclient.window = window;
-    event.xclient.message_type = WM_PROTOCOLS;
+    event.xclient.message_type = XInternAtom(mDisplay,
+        "WM_PROTOCOLS", False);
 
+    event.xclient.window = window;
     event.xclient.format = 32;
-    event.xclient.data.l[0] = static_cast<long>(WM_DELETE_WINDOW);
+
+    event.xclient.data.l[0] = static_cast<long>(mCloseAppMessage);
     event.xclient.data.l[1] = CurrentTime;
 
     XSendEvent(mDisplay, window, False, NoEventMask, &event);

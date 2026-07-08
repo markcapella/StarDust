@@ -64,7 +64,6 @@ class ConfigDialog : public QDialog {
         QPushButton* mAboutButton = nullptr;
 
         QList<bool> mSettingChanges;
-        Atom mConfigDialogUpdated{};
 
         QDialog* mAboutDialog = nullptr;
 
@@ -87,7 +86,8 @@ class ConfigDialog : public QDialog {
          * Send an event to the X11 thread telling it to update
          * with new user config settings.
          */
-        void sendConfigDialogUpdatedEvent();
+        void sendConfigDialogUpdatedEvent(
+            const bool canvasNeedsRedraw);
 
         /**
          * Show this apps "About" dialog.

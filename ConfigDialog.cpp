@@ -77,10 +77,6 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
 
     // Init settings change list, size / value.
     mSettingChanges.fill(false, SettingsHelper::PROPERTIES.size());
-
-    // X11 message Atoms.
-    mConfigDialogUpdated = XInternAtom(mDisplay,
-        CONFIG_DIALOG_UPDATED_EVENT.c_str(), False);
 }
 
 /**
@@ -651,6 +647,7 @@ ConfigDialog::acceptConfigDialog() {
     // change that needs a canvas redraw. We use shorthand
     // "Any changed setting in PROPERTIES list starting from
     // background color forces canvas redraw".
+    bool canvasNeedsRedraw = false;
     const int SETTINGS_SIZE = SettingsHelper::PROPERTIES.size();
     for (int index = 0; index < SETTINGS_SIZE; index++) {
         const SettingsHelper::SettingsProperty THIS_SETTING =
@@ -658,12 +655,13 @@ ConfigDialog::acceptConfigDialog() {
         if (THIS_SETTING.name == SettingsHelper::BACKGROUND_COLOR) {
             for (; index < SETTINGS_SIZE; index++) {
                 if (mSettingChanges[index] == true) {
-                    sendConfigDialogUpdatedEvent();
+                    canvasNeedsRedraw = true;
                     break;
                 }
             }
         }
     }
+    sendConfigDialogUpdatedEvent(canvasNeedsRedraw);
 
     // Translate controls to new lang for next time.
     translateConfigDialog();
@@ -678,14 +676,17 @@ ConfigDialog::acceptConfigDialog() {
  * canvas with new user config settings.
  */
 void
-ConfigDialog::sendConfigDialogUpdatedEvent() {
+ConfigDialog::sendConfigDialogUpdatedEvent(
+    const bool canvasNeedsRedraw) {
+
     XEvent event{};
     event.xclient.type = ClientMessage;
-    event.xclient.window = getWindow();
-    event.xclient.message_type = mConfigDialogUpdated;
+    event.xclient.message_type = mConfigUpdated;
 
+    event.xclient.window = getWindow();
     event.xclient.format = 32;
-    event.xclient.data.l[0] = 12345;
+
+    event.xclient.data.l[0] = canvasNeedsRedraw ? 1L : 0L;
 
     XSendEvent(mDisplay, getWindow(), False, NoEventMask, &event);
     XFlush(mDisplay);

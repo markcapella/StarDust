@@ -76,15 +76,12 @@ class StickyWindow {
 
     private:
         // Members.
+        Window mX11Window = None;
+        char* mWindowTitle = nullptr;
+
         bool mIsVisuallyTransparent = false;
         XVisualInfo mVisualInfoStruct { };
         Colormap mColorMap { };
-
-        Atom mDeleteMessage { };
-        Atom mConfigDialogUpdated { };
-
-        Window mX11Window = None;
-        char* mWindowTitle = nullptr;
 
         vector<Button*> mButtons;
         mutable recursive_mutex mButtonsMutLock;
@@ -261,7 +258,8 @@ class StickyWindow {
          * Receives an event from Qt ConfigDialog that it has
          * completed with new user config settings.
          */
-        void receiveConfigDialogUpdatedEvent();
+        void receiveConfigDialogUpdatedEvent(
+            const bool canvasNeedsRedraw);
 
         /**
          * Cursor watcher detects user actions.

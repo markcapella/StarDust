@@ -64,12 +64,6 @@ static inline constexpr XRenderColor TURQUOISE_RCOLOR =
 static inline constexpr const char*
     TIME_DISPLAY_FONT = "Serif-42:bold";
 
-// Pngs.
-static inline const QString PIN_IN_PNG_FILENAME = "pinIn.png";
-static inline const QString PIN_OUT_PNG_FILENAME = "pinOut.png";
-
-static inline const string CONFIG_DIALOG_UPDATED_EVENT =
-    "CONFIG_DIALOG_UPDATED";
 
 // App globals.
 extern DisplayHelper* mDisplayHelper;
@@ -85,3 +79,14 @@ extern Canvas* mCanvas;
 
 extern XImage* mPinInXImage;
 extern XImage* mPinOutXImage;
+
+extern Atom mCloseAppMessage;
+extern Atom mConfigUpdated;
+
+// Pngs.
+static inline const QString PIN_IN_PNG_FILENAME = "pinIn.png";
+static inline const QString PIN_OUT_PNG_FILENAME = "pinOut.png";
+
+// Window Messages.
+static inline const char* WINDOW_CLOSED = "WM_DELETE_WINDOW";
+static inline const char* CONFIG_UPDATED = "CONFIG_UPDATED";

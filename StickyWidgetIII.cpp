@@ -44,12 +44,16 @@ TranslationHelper* mTranslationHelper = nullptr;
 StickyWindow* mStickyWindow = nullptr;
 Canvas* mCanvas = nullptr;
 
+// Pngs.
 XImage* mPinInXImage = nullptr;
 XImage* mPinOutXImage = nullptr;
 
-// App globals;
 QImage mPinInQImage{};
 QImage mPinOutQImage{};
+
+// Window Messages.
+Atom mCloseAppMessage{};
+Atom mConfigUpdated{};
 
 
 /**
@@ -65,6 +69,10 @@ main(int argc, char** argv) {
 
     mDisplayHelper = new DisplayHelper();
     mDisplay = mDisplayHelper->getDisplay();
+
+    // Define global X11 message Atoms.
+    mCloseAppMessage = XInternAtom(mDisplay, WINDOW_CLOSED, False);
+    mConfigUpdated = XInternAtom(mDisplay, CONFIG_UPDATED, False);
 
     // Set X Error handler (quiets non-errors).
     mXHelper = new XHelper();
