@@ -3,6 +3,8 @@
 
 #include <X11/extensions/Xrender.h>
 
+#include "Button.h"
+
 /**
  * Star(s) are the main objects in the view.
  */
@@ -14,7 +16,10 @@ class Star : public QObject {
         static inline const int AVAILABLE_STAR_COLORS = 4;
 
         // Constructor.
-        explicit Star(const Window window, QObject* parent = nullptr);
+        explicit Star(const Window window,
+            const std::vector<Button*> buttons,
+            QObject* parent = nullptr);
+
         ~Star() override = default;
 
         /**
@@ -51,20 +56,6 @@ class Star : public QObject {
          * Set this star @ a random screen color.
          */
         void randomizeColor();
-
-        /**
-         * Check if this star has changed and needs to be redrawn.
-         */
-        bool needsDrawAfterChange() const {
-            return mNeedsDrawAfterChange;
-        }
-
-        /**
-         * Set this star has changed and needs to be redrawn.
-         */
-        void setNeedsDrawAfterChange(const bool value) {
-            mNeedsDrawAfterChange = value;
-        }
 
         /**
          * Draw this star.
@@ -112,10 +103,10 @@ class Star : public QObject {
     private:
         // Members.
         Window mWindow = None;
+        std::vector<Button*> mWindowButtons;
 
         // Current star visibility.
         bool mIsVisible = false;
-        bool mNeedsDrawAfterChange = false;
 
         // Color, size & position.
         XRenderColor mColor{};

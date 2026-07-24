@@ -4,8 +4,9 @@
 /**
  * Canvas is the main widget & draw.
  */
-Canvas::Canvas(const Window window) {
+Canvas::Canvas(const Window window, const vector<Button*>& buttons) {
     mWindow = window;
+    mWindowButtons = buttons;
 }
 
 Canvas::~Canvas() {
@@ -17,11 +18,11 @@ Canvas::~Canvas() {
  */
 void
 Canvas::initCanvas() {
-    mStars.clear();
+    mStars.clear(); // s/b logically redundant.
 
     const int NUMBER_OF_NEW_STARS = getSaturatedStarCount();
     for (int i = 0; i < NUMBER_OF_NEW_STARS; i++) {
-        mStars.push_back(new Star(mWindow));
+        mStars.push_back(new Star(mWindow, mWindowButtons));
         mStars[i]->startChangeTimers();
     }
 
@@ -59,13 +60,9 @@ Canvas::drawCanvas() {
     // Draw Widget canvas.
     const int NUMBER_OF_NEW_STARS = mStars.size();
     for (int i = 0; i < NUMBER_OF_NEW_STARS; i++) {
-        //if (mStars[i]->needsDrawAfterChange()) {
-            mStars[i]->draw();
-       //}
+        mStars[i]->draw();
     }
-    setNeedsDrawAfterStarChange(false);
 
-    // End transparent rendering.
     XRenderFreePicture(mDisplay, canvasPic);
     XFlush(mDisplay);
 }
@@ -99,7 +96,6 @@ Canvas::eraseCanvas() {
         mSettingsHelper->getCanvasHeight()
     );
 
-    // End transparent rendering.
     XRenderFreePicture(mDisplay, canvasPic);
     XFlush(mDisplay);
 }

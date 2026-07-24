@@ -18,11 +18,11 @@ StickyWindow::StickyWindow() {
     // Create & set base x11 window.
     setX11Window(createX11Window());
 
-    // Instantiate widget canvas.
-    mCanvas = new Canvas(mX11Window);
-
     // Create control buttons.
     createAllWindowButtons();
+
+    // Instantiate widget canvas.
+    mCanvas = new Canvas(getX11Window(), mButtons);
     setControlButtonsVisibility();
 
     // Create autohide timer for control buttons,
@@ -190,10 +190,6 @@ StickyWindow::run() {
         // Support Move & Resize.
         cursorWatcherThread();
 
-        if (mCanvas->needsDrawAfterStarChange()) {
-            mCanvas->drawCanvas();
-        }
-
         // Support ConfigDialog loop.
         QCoreApplication::processEvents();
     }
@@ -311,14 +307,7 @@ StickyWindow::createX11Window() {
     // Set "StickyWindow" type, show window, set config state.
     setStickyWindowType();
     show();
-
-    // On first time run, ensure window appears ontop
-    // like a splash screen. Else, ensure stick state.
-    if (INITIAL_RUN) {
-        XRaiseWindow(mDisplay, mX11Window);
-    } else {
-        setWindowStickPosition();
-    }
+    setWindowStickPosition();
 
     // Apply strict configuration to the window. Awesome WM
     // specifically needs this.
@@ -345,12 +334,8 @@ StickyWindow::defineWindowOnFirstRun() {
     const int SCREEN_HEIGHT = HeightOfScreen(
         DefaultScreenOfDisplay(mDisplay));
 
-    mSettingsHelper->setWindowWidth(Button::BUTTON_WIDTH +
-        mSettingsHelper->getCanvasWidth() +
-        Button::BUTTON_WIDTH);
-    mSettingsHelper->setWindowHeight(Button::BUTTON_HEIGHT +
-        mSettingsHelper->getCanvasHeight() +
-        Button::BUTTON_HEIGHT);
+    mSettingsHelper->setWindowWidth(mSettingsHelper->getCanvasWidth());
+    mSettingsHelper->setWindowHeight(mSettingsHelper->getCanvasHeight());
 
     mSettingsHelper->setWindowXPos((SCREEN_WIDTH -
         mSettingsHelper->getWindowWidth()) / 2);
@@ -487,8 +472,6 @@ StickyWindow::drawAllWindowButtons() {
                 .height = (unsigned short) mButtons[i]->getHeight()
             };
             rects.push_back(buttonInputRegion);
-        } else {
-            mButtons[i]->erase(getX11Window());
         }
     }
     XShapeCombineRectangles(mDisplay, mX11Window, ShapeInput,
@@ -557,7 +540,7 @@ StickyWindow::setHoveredControlButtonVisibility(
     const int BUTTONS_COUNT = mButtons.size();
     for (int i = 1; i < BUTTONS_COUNT; i++) {
         // Set visible hovered.
-        if (mButtons[i]->getRect().contains(position)) {
+        if (mButtons[i]->getQRect().contains(position)) {
             if (!mButtons[i]->isVisible()) {
                 mButtons[i]->setVisible(true);
                 redrawRequired = true;
@@ -586,7 +569,7 @@ StickyWindow::pressHoveredButton(const QPoint position) {
 
     const int BUTTONS_COUNT = mButtons.size();
     for (int i = 0; i < BUTTONS_COUNT; i++) {
-        if (mButtons[i]->getRect().contains(position)) {
+        if (mButtons[i]->getQRect().contains(position)) {
             mButtons[i]->setPressed(true);
             return QPoint(mButtons[i]->getX(),
                 mButtons[i]->getY());
@@ -638,7 +621,7 @@ StickyWindow::clickPressedHoveredButton(const QPoint position) {
 
     const int BUTTONS_COUNT = mButtons.size();
     for (int i = 0; i < BUTTONS_COUNT; i++) {
-        if (mButtons[i]->getRect().contains(position)) {
+        if (mButtons[i]->getQRect().contains(position)) {
             if (mButtons[i]->isPressed()) {
                 if (i == 0) {
                     clickPressedPinButton();
@@ -682,8 +665,8 @@ StickyWindow::unPressAllWindowButtons() {
  */
 void
 StickyWindow::defineWindowCanvasPosition() {
-    mSettingsHelper->setCanvasXPos(Button::BUTTON_WIDTH);
-    mSettingsHelper->setCanvasYPos(Button::BUTTON_HEIGHT);
+    mSettingsHelper->setCanvasXPos(0);
+    mSettingsHelper->setCanvasYPos(0);
 }
 
 /**
@@ -691,10 +674,8 @@ StickyWindow::defineWindowCanvasPosition() {
  */
 void
 StickyWindow::defineWindowCanvasSize() {
-    mSettingsHelper->setCanvasWidth(mSettingsHelper->
-        getWindowWidth() - 2 * Button::BUTTON_WIDTH);
-    mSettingsHelper->setCanvasHeight(mSettingsHelper->
-        getWindowHeight() - 2 * Button::BUTTON_WIDTH);
+    mSettingsHelper->setCanvasWidth(mSettingsHelper->getWindowWidth());
+    mSettingsHelper->setCanvasHeight(mSettingsHelper->getWindowHeight());
 }
 
 /**
@@ -831,12 +812,10 @@ StickyWindow::handleX11EventQueue() {
                     updateAllWindowButtons();
                     defineWindowCanvasPosition();
                     defineWindowCanvasSize();
-                    //setHoveredPinButtonVisibility(true);
-                    //draw();
+                    draw();
                 }
                 if (mIsMovingWindow) {
                     mIsMovingWindow = false;
-                    //draw();
                 }
 
                 unPressAllWindowButtons();

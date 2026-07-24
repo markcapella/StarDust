@@ -31,18 +31,20 @@ class SettingsHelper {
 
         IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
         IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
+        IC_QString DIVIDER_2 = "divider02";
+
         IC_QString BACKGROUND_COLOR = "Background Color";
         IC_QString BACKGROUND_OPACITY = "Background Opacity";
-        IC_QString DIVIDER_2 = "divider02";
+        IC_QString DIVIDER_3 = "divider03";
 
         IC_QString MAX_STAR_SIZE = "Star Size Maximum";
         IC_QString STAR_SATURATION = "Starfield Saturation";
-        IC_QString DIVIDER_3 = "divider03";
+        IC_QString DIVIDER_4 = "divider04";
 
         IC_QString SIZE_CHANGE_DELAY = "Size Change Delay";
         IC_QString POSITION_CHANGE_DELAY = "Position Change Delay";
         IC_QString COLOR_CHANGE_DELAY = "Color Change Delay";
-        IC_QString DIVIDER_4 = "divider04";
+        IC_QString DIVIDER_5 = "divider05";
 
         IC_QString STAR_COLOR_COOL = "Star Color Cool";
         IC_QString STAR_COLOR_WARM = "Star Color Warm";
@@ -109,6 +111,12 @@ class SettingsHelper {
               .rangeMinimum = 1, .rangeMaximum = 9
             },
 
+            { .name = DIVIDER_2,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
             { .name = BACKGROUND_COLOR,
               .valueType = COLOR_VALUETYPE, .initialValue = "#0055ff",
               .rangeMinimum = numeric_limits<int>::min(),
@@ -120,7 +128,7 @@ class SettingsHelper {
               .rangeMinimum = 0, .rangeMaximum = 255
             },
 
-            { .name = DIVIDER_2,
+            { .name = DIVIDER_3,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "10",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
@@ -136,7 +144,7 @@ class SettingsHelper {
               .rangeMinimum = 5, .rangeMaximum = 100
             },
 
-            { .name = DIVIDER_3,
+            { .name = DIVIDER_4,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
@@ -157,7 +165,7 @@ class SettingsHelper {
               .rangeMinimum = 1, .rangeMaximum = 2000
             },
 
-            { .name = DIVIDER_4,
+            { .name = DIVIDER_5,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()

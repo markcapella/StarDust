@@ -22,11 +22,11 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
     TITLE += " " + I18N("Settings");
     setWindowTitle(QString(TITLE));
 
-    // Add the formlayout to a formcontainer.
+    // Set the window attributes, create controls & center.
     createConfigDialog();
     mFormLayout->setFormAlignment(Qt::AlignCenter);
 
-    // Add form layout to a container.
+    // Add the formlayout to a formcontainer.
     QWidget* formContainer = new QWidget();
     formContainer->setLayout(mFormLayout);
 
@@ -41,39 +41,39 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
 
     // Create Buttons Layout.
     QHBoxLayout* mButtonLayout = new QHBoxLayout();
-    mButtonLayout->addStretch();
 
     // Create all buttons for the layout.
+    mAboutButton = new QPushButton(I18N("About"), this);
     mOkButton = new QPushButton(I18N("Ok"), this);
     mApplyButton = new QPushButton(I18N("Apply"), this);
-    mAboutButton = new QPushButton(I18N("About"), this);
     mCancelButton = new QPushButton(I18N("Cancel"), this);
 
     // Ensure nothing defaults to having focus.
+    mAboutButton->setAutoDefault(false);
     mOkButton->setAutoDefault(false);
     mApplyButton->setAutoDefault(false);
-    mAboutButton->setAutoDefault(false);
     mCancelButton->setAutoDefault(false);
 
     // Add all buttons to the layout.
+    mButtonLayout->addWidget(mAboutButton);
+    mButtonLayout->addStretch();
     mButtonLayout->addWidget(mOkButton);
     mButtonLayout->addWidget(mApplyButton);
-    mButtonLayout->addWidget(mAboutButton);
     mButtonLayout->addWidget(mCancelButton);
-
-    // Connect all button click signals.
-    connect(mOkButton, &QPushButton::clicked, this,
-        &ConfigDialog::okConfigDialog);
-    connect(mApplyButton, &QPushButton::clicked, this,
-        &ConfigDialog::acceptConfigDialog);
-    connect(mAboutButton, &QPushButton::clicked, this,
-        &ConfigDialog::showAboutDialog);
-    connect(mCancelButton, &QPushButton::clicked, this,
-        &ConfigDialog::reject);
 
     // Add buttons widget to layout & set as Layout.
     mMainLayout->addLayout(mButtonLayout);
     setLayout(mMainLayout);
+
+    // Connect all button click signals.
+    connect(mAboutButton, &QPushButton::clicked, this,
+        &ConfigDialog::showAboutDialog);
+    connect(mOkButton, &QPushButton::clicked, this,
+        &ConfigDialog::okConfigDialog);
+    connect(mApplyButton, &QPushButton::clicked, this,
+        &ConfigDialog::acceptConfigDialog);
+    connect(mCancelButton, &QPushButton::clicked, this,
+        &ConfigDialog::reject);
 
     // Init settings change list, size / value.
     mSettingChanges.fill(false, SettingsHelper::PROPERTIES.size());
@@ -120,14 +120,14 @@ ConfigDialog::translateConfigDialog() {
         }
     }
 
+    mAboutButton->setText(I18N("About"));
     mOkButton->setText(I18N("Ok"));
     mApplyButton->setText(I18N("Apply"));
     mCancelButton->setText(I18N("Cancel"));
-    mAboutButton->setText(I18N("About"));
 
+    mAboutButton->clearFocus();
     mOkButton->clearFocus();
     mApplyButton->clearFocus();
-    mAboutButton->clearFocus();
     mCancelButton->clearFocus();
 }
 
@@ -519,6 +519,8 @@ ConfigDialog::createConfigDialog() {
         if (THIS_VALUETYPE == COMBOBOX_VALUETYPE &&
             THIS_KEY == SettingsHelper::APP_LANGUAGE) {
             QComboBox* langComboWidget = new QComboBox(this);
+            langComboWidget->setItemDelegate(new ComboboxDelegate(
+                langComboWidget));
             langComboWidget->addItems(ALL_LANGUAGES);
             langComboWidget->setObjectName(THIS_KEY);
             mFormLayout->addRow(I18N_DISPLAY_KEY, langComboWidget);

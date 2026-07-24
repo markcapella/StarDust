@@ -18,7 +18,7 @@ class ConfigDialog : public QDialog {
 
     public:
         static inline const int CONFIG_DIALOG_WIDTH = 575;
-        static inline const int CONFIG_DIALOG_HEIGHT = 690;
+        static inline const int CONFIG_DIALOG_HEIGHT = 720;
 
         static inline const int FORM_TOP_BOTTOM_SPACING = 15;
         static inline const int FORM_LAYOUT_ROW_SPACING = 8;
@@ -58,10 +58,11 @@ class ConfigDialog : public QDialog {
         QVBoxLayout* mMainLayout = nullptr;
 
         QDialogButtonBox* mConfigButtonBox = nullptr;
+
+        QPushButton* mAboutButton = nullptr;
         QPushButton* mOkButton = nullptr;
         QPushButton* mApplyButton = nullptr;
         QPushButton* mCancelButton = nullptr;
-        QPushButton* mAboutButton = nullptr;
 
         QList<bool> mSettingChanges;
 

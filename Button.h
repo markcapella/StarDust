@@ -30,7 +30,7 @@ class Button {
         double getHeight() const { return mHeight; }
         void setHeight(const double height) { mHeight = height; }
 
-        QRect getRect() const { return QRect(
+        QRect getQRect() const { return QRect(
             mX, mY, mWidth, mHeight); }
 
         bool isVisible() const { return mButtonVisible; }
@@ -53,8 +53,8 @@ class Button {
         void setHasDialog(const bool hasDialog) {
             mButtonHasDialog = hasDialog; }
 
-        string toString() const {
-            ostringstream outString;
+        std::string toString() const {
+            std::ostringstream outString;
             outString << "mX , mY : [" <<
                 mX << " , " << mY << "], w , h : [" <<
                 mWidth << " , " << mHeight << "].";

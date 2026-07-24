@@ -4,10 +4,11 @@
 /**
  * Star(s) are the main objects in the view.
  */
-Star::Star(const Window window, QObject* parent) :
-    QObject(parent) {
+Star::Star(const Window window, const std::vector<Button*> buttons,
+    QObject* parent) : QObject(parent) {
 
     mWindow = window;
+    mWindowButtons = buttons;
 
     // After setting initial size, we can randomize
     // position, then randomize color.
@@ -17,7 +18,6 @@ Star::Star(const Window window, QObject* parent) :
 
     // Start change timers and wait for twinkle.
     createAndStartChangeTimers();
-    setNeedsDrawAfterChange(true);
 }
 
 /**
@@ -40,19 +40,17 @@ Star::randomizeSize() {
  */
 void
 Star::randomizePosition() {
-    const int CANVAS_WIDTH_POS = mSettingsHelper->getCanvasXPos();
-    const int CANVAS_WIDTH = mSettingsHelper->getCanvasWidth();
+    const int CANVAS_X_POS = mSettingsHelper->getCanvasXPos();
+    const int CANVAS_Y_POS = mSettingsHelper->getCanvasYPos();
 
-    const int CANVAS_HEIGHT_POS = mSettingsHelper->getCanvasYPos();
+    const int CANVAS_WIDTH = mSettingsHelper->getCanvasWidth();
     const int CANVAS_HEIGHT = mSettingsHelper->getCanvasHeight();
 
     const int MAX_SIZE = mSettingsHelper->
         getIntSetting(SettingsHelper::MAX_STAR_SIZE);
 
-    setXPos(CANVAS_WIDTH_POS + randomIntegerUpTo(
-        CANVAS_WIDTH - MAX_SIZE));
-    setYPos(CANVAS_HEIGHT_POS + randomIntegerUpTo(
-        CANVAS_HEIGHT - MAX_SIZE));
+    setXPos(CANVAS_X_POS + randomIntegerUpTo(CANVAS_WIDTH - MAX_SIZE));
+    setYPos(CANVAS_Y_POS + randomIntegerUpTo(CANVAS_HEIGHT - MAX_SIZE));
 }
 
 /**
@@ -80,36 +78,47 @@ Star::randomizeColor() {
  */
 void
 Star::draw() {
+    // Avoid drawing in visible corners.
+    const float STAR_SIZE = getSize();
+    const int POS_OFFSET = (mSettingsHelper->getIntSetting(
+        SettingsHelper::MAX_STAR_SIZE) - STAR_SIZE) / 2;
+    const QRect STAR_RECT = QRect(getXPos() + POS_OFFSET,
+        getYPos() + POS_OFFSET, STAR_SIZE, STAR_SIZE);
+
+    const int BUTTONS_COUNT = mWindowButtons.size();
+    for (int i = 0; i < BUTTONS_COUNT; i++) {
+        const QRect BUTTON_RECT = mWindowButtons[i]->getQRect();
+        if (BUTTON_RECT.intersects(STAR_RECT)) {
+            mIsVisible = false;
+            return;
+        }
+    }
+
+    // Draw.
     Picture canvasPic = XRenderCreatePicture(mDisplay,
         mWindow, XRenderFindStandardFormat(mDisplay,
         PictStandardARGB32), 0, nullptr);
-
     const XRenderColor STAR_RCOLOR = getColor();
 
-    const int POS_OFFSET = (mSettingsHelper->getIntSetting(
-        SettingsHelper::MAX_STAR_SIZE) - getSize()) / 2;
-
-    for (int i = 0; i < getSize(); i++) {
+    for (int i = 0; i < STAR_SIZE; i++) {
         XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
             &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
             getYPos() + POS_OFFSET + i, 1, 1);
         XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
             &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
-            getYPos() + POS_OFFSET + getSize() - i - 1, 1, 1);
+            getYPos() + POS_OFFSET + STAR_SIZE - i - 1, 1, 1);
     }
 
-    const int MID_POINT = (getSize() - 1) / 2;
+    const int MID_POINT = (STAR_SIZE - 1) / 2;
     XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
         &STAR_RCOLOR, getXPos() + POS_OFFSET + 1,
-        getYPos() + POS_OFFSET + MID_POINT, getSize() - 2, 1);
+        getYPos() + POS_OFFSET + MID_POINT, STAR_SIZE - 2, 1);
     XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
         &STAR_RCOLOR, getXPos() + POS_OFFSET + MID_POINT,
-        getYPos() + POS_OFFSET + 1, 1, getSize() - 2);
+        getYPos() + POS_OFFSET + 1, 1, STAR_SIZE - 2);
 
-    // End transparent rendering.
     XRenderFreePicture(mDisplay, canvasPic);
     mIsVisible = true;
-    setNeedsDrawAfterChange(false);
 }
 
 /**
@@ -117,10 +126,14 @@ Star::draw() {
  */
 void
 Star::erase() {
+    if (!mIsVisible) {
+        return;
+    }
+
+    // Erase.
     Picture canvasPic = XRenderCreatePicture(mDisplay,
         mWindow, XRenderFindStandardFormat(mDisplay,
         PictStandardARGB32), 0, nullptr);
-
     const XRenderColor BACKGROUND_COLOR = mSettingsHelper->
         getColorSetting(SettingsHelper::BACKGROUND_COLOR);
     const int BACKGROUND_OPACITY = mSettingsHelper->
@@ -129,30 +142,29 @@ Star::erase() {
         BACKGROUND_COLOR.red, BACKGROUND_COLOR.green,
         BACKGROUND_COLOR.blue, BACKGROUND_OPACITY);
 
+    const float STAR_SIZE = getSize();
     const int POS_OFFSET = (mSettingsHelper->getIntSetting(
-        SettingsHelper::MAX_STAR_SIZE) - getSize()) / 2;
+        SettingsHelper::MAX_STAR_SIZE) - STAR_SIZE) / 2;
 
-    for (int i = 0; i < getSize(); i++) {
+    for (int i = 0; i < STAR_SIZE; i++) {
         XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
             &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
             getYPos() + POS_OFFSET + i, 1, 1);
         XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
             &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
-            getYPos() + POS_OFFSET + getSize() - i - 1, 1, 1);
+            getYPos() + POS_OFFSET + STAR_SIZE - i - 1, 1, 1);
     }
 
-    const int MID_POINT = (getSize() - 1) / 2;
+    const int MID_POINT = (STAR_SIZE - 1) / 2;
     XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
         &STAR_RCOLOR, getXPos() + POS_OFFSET + 1,
-        getYPos() + POS_OFFSET + MID_POINT, getSize() - 2, 1);
+        getYPos() + POS_OFFSET + MID_POINT, STAR_SIZE - 2, 1);
     XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
         &STAR_RCOLOR, getXPos() + POS_OFFSET + MID_POINT,
-        getYPos() + POS_OFFSET + 1, 1, getSize() - 2);
+        getYPos() + POS_OFFSET + 1, 1, STAR_SIZE - 2);
 
-    // End transparent rendering.
     XRenderFreePicture(mDisplay, canvasPic);
     mIsVisible = false;
-    setNeedsDrawAfterChange(false);
 }
 
 /**
@@ -220,9 +232,7 @@ Star::changeSize() {
         return;
     }
 
-    if (mIsVisible) {
-        erase();
-    }
+    erase();
     if (mCanvas->isCanvasVisible()) {
         randomizeSize();
         draw();
@@ -240,9 +250,7 @@ Star::changePosition() {
         return;
     }
 
-    if (mIsVisible) {
-        erase();
-    }
+    erase();
     if (mCanvas->isCanvasVisible()) {
         randomizePosition();
         draw();
@@ -260,9 +268,7 @@ Star::changeColor() {
         return;
     }
 
-    if (mIsVisible) {
-        erase();
-    }
+    erase();
     if (mCanvas->isCanvasVisible()) {
         randomizeColor();
         draw();

@@ -15,6 +15,7 @@
 #include <iostream>
 #include <mutex>
 #include <signal.h>
+#include <string>
 #include <thread>
 #include <unistd.h>
 #include <vector>
@@ -115,3 +116,5 @@ typedef chrono::steady_clock Clock;
 #include "ColorChangeRateHints.h"
 #include "SizeChangeRateHints.h"
 #include "PositionChangeRateHints.h"
+
+#include "ComboboxDelegate.h"

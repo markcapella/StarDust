@@ -1,13 +1,16 @@
 
 #pragma once
 
+#include "Button.h"
+
 /**
  * Canvas is the main widget & draw.
  */
 class Canvas {
 
     public:
-        Canvas(const Window window);
+        Canvas(const Window window, const std::vector<Button*>& buttons);
+
         ~Canvas();
 
         /**
@@ -31,20 +34,6 @@ class Canvas {
         void setCanvasVisibile() { mIsVisible = true; };
 
         /**
-         * Check if stars have changed and need to be redrawn.
-         */
-        bool needsDrawAfterStarChange() const {
-            return mNeedsDrawAfterStarChange;
-        }
-
-        /**
-         * Set that stars have been changed and need to be redrawn.
-         */
-        void setNeedsDrawAfterStarChange(const bool value) {
-            mNeedsDrawAfterStarChange = value;
-        }
-
-        /**
          * Draw the widget canvas, assumes cleared
          * transparent background.
          */
@@ -63,10 +52,10 @@ class Canvas {
     private:
         // Members.
         Window mWindow = None;
+        vector<Button*> mWindowButtons;
 
         bool mInitialized = false;
         bool mIsVisible = false;
-        bool mNeedsDrawAfterStarChange = false;
 
         vector<Star*> mStars;
 
