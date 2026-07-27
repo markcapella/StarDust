@@ -80,9 +80,11 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     mainLayout->addWidget(iconCreditsLine);
 
     // Prepare warnings.
-    const QString THIS_WM_NAME(mXHelper->
-        getWindowManagerName().c_str());
-    const QString COMPOSITOR_NAME(mXHelper->getCompositorName());
+    const QString WINDOW_MANAGER_NAME =
+        mXHelper->getWindowManagerName().c_str();
+    const QString COMPOSITOR_NAME =
+        WINDOW_MANAGER_NAME == "KWin" ?
+            "KWin" : mXHelper->getCompositorName();
     bool areThereWarningsYet = false;
 
     // App visual transparency warning line.
@@ -134,7 +136,7 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     }
 
     // App tiling WM warning line.
-    if (TILING_WM_NAMES.contains(THIS_WM_NAME)) {
+    if (TILING_WM_NAMES.contains(WINDOW_MANAGER_NAME)) {
         // Add blank line before first warning.
         if (!areThereWarningsYet) {
             mainLayout->addSpacing(20);
@@ -187,8 +189,9 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
 
     // App WM and Compositor summary line.
     const QString SUMMARY_WM_WARNING = I18N("Your Window Manager is") +
-        " " + THIS_WM_NAME + ", " + I18N("Your Compositor is") + " " +
-        (COMPOSITOR_NAME == "" ? I18N("unknown") : COMPOSITOR_NAME) + ".";
+        " " + WINDOW_MANAGER_NAME + ", " + I18N("Your Compositor is") +
+        " " + (COMPOSITOR_NAME == "" ?
+            I18N("unknown") : COMPOSITOR_NAME) + ".";
 
     QLabel* appSummaryLine = new QLabel(QString(
         SUMMARY_WM_WARNING), this);
