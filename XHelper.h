@@ -213,12 +213,22 @@ class XHelper {
         bool isWindowDock(const Window window);
 
         /**
-         * This method scans the desktop windows list in
-         * stacked order to determine if a requested window
-         * is the one the mouse cursor is over.
+         * This method determines if the mouse is hovered above
+         * our window and capable of clicking it in a rect @ a point.
          */
-        bool isWindowHovered(const Window window,
-            const QPoint pos, const bool checkEntireWindow);
+        bool isWindowRectHovered(const Window window, const QRect rect,
+            const QPoint pos);
+
+        /**
+         * Checks if a specific point in global screen coordinates will
+         * land on an active hit-test area of a given window.
+         *
+         * Supports standard windows, decorated/undecorated windows,
+         * and windows with custom ShapeInput regions (like multi-button
+         * click-through windows).
+         */
+        bool doesWindowReceiveClickAtPos(const Window window,
+            const int rootPosX, const int rootPosY);
 
         /**
          * Place window in stack order to be on top

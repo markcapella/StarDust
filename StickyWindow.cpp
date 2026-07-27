@@ -537,16 +537,21 @@ StickyWindow::setHoveredControlButtonVisibility(
 
     bool redrawRequired = false;
 
+    // Set visible hovered, clear all others.
     const int BUTTONS_COUNT = mButtons.size();
     for (int i = 1; i < BUTTONS_COUNT; i++) {
-        // Set visible hovered.
-        if (mButtons[i]->getQRect().contains(position)) {
+        const QRect BUTTON_RECT = QRect(
+            mSettingsHelper->getWindowXPos() + mButtons[i]->getX(),
+            mSettingsHelper->getWindowYPos() + mButtons[i]->getY(),
+            mButtons[i]->getWidth(), mButtons[i]->getHeight());
+
+        if (mXHelper->isWindowRectHovered(getX11Window(), BUTTON_RECT,
+            position)) {
             if (!mButtons[i]->isVisible()) {
                 mButtons[i]->setVisible(true);
                 redrawRequired = true;
             }
         } else {
-            // Clear all others.
             if (mButtons[i]->isVisible() != CONFIG_MODE) {
                 mButtons[i]->setVisible(CONFIG_MODE);
                 redrawRequired = true;
@@ -554,7 +559,7 @@ StickyWindow::setHoveredControlButtonVisibility(
         }
     }
 
-    // One final draw for all affected.
+    // One final draw for any affected.
     if (redrawRequired) {
         draw();
     }
@@ -892,7 +897,6 @@ StickyWindow::cursorWatcherThread() {
     Window rootWindow = None;
     int rootX = -1;
     int rootY = -1;
-
     Window window = None;
     int winX = -1;
     int winY = -1;
@@ -904,15 +908,18 @@ StickyWindow::cursorWatcherThread() {
         return;
     }
 
-    // Set PinButton visibility if hovered.
+    // Set PinButton visibility if any of canvas hovered.
+    const QRect CANVAS_RECT = QRect(
+        mSettingsHelper->getWindowXPos() + mSettingsHelper->getCanvasXPos(),
+        mSettingsHelper->getWindowYPos() + mSettingsHelper->getCanvasYPos(),
+        mSettingsHelper->getCanvasWidth(), mSettingsHelper->getCanvasHeight());
     const QPoint CURSOR_ROOT_POSITION = QPoint(rootX, rootY);
-    const bool IS_WINDOW_HOVERED = mXHelper->isWindowHovered(
-        mX11Window, CURSOR_ROOT_POSITION, true);
-    setHoveredPinButtonVisibility(IS_WINDOW_HOVERED);
+    const bool IS_CANVAS_HOVERED = mXHelper->isWindowRectHovered(
+        mX11Window, CANVAS_RECT, CURSOR_ROOT_POSITION);
+    setHoveredPinButtonVisibility(IS_CANVAS_HOVERED);
 
-    // Set all other controls visibility if hovered.
-    const QPoint CURSOR_WINDOW_POSITION = QPoint(winX, winY);
-    setHoveredControlButtonVisibility(CURSOR_WINDOW_POSITION);
+    // Set all other controls visibility.
+    setHoveredControlButtonVisibility(CURSOR_ROOT_POSITION);
 
     // Are we moving or sizing the window?
     if (mIsMouseClicked) {

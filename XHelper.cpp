@@ -846,13 +846,13 @@ XHelper::isWindowDock(const Window window) {
 }
 
 /**
- * This method scans the desktop windows list in
- * stacked order to determine if a requested window
- * is the one the mouse cursor is over.
+ * This method determines if the mouse is hovered above
+ * our window and capable of clicking it in a rect @ a point.
  */
 bool
-XHelper::isWindowHovered(const Window window, const QPoint pos,
-    const bool checkEntireWindow) {
+XHelper::isWindowRectHovered(const Window window, const QRect rect,
+    const QPoint pos) {
+
     // Get info for the request.
     const long VISIBLE_WS = getVisibleDesktop();
     WinInfo* winInfo = getWinInfoForWindow(window);
@@ -893,42 +893,20 @@ XHelper::isWindowHovered(const Window window, const QPoint pos,
             continue;
         }
 
-        // We found the hovered window, is it the requested one?
+        // If it's our window, result is if point-in-rect.
         if (EACH->window == window) {
-            if (checkEntireWindow) {
-                uninitWinInfos(winInfos);
-                delete winInfo;
-                return true;
-            }
-            const QRect CANVAS_RECT = QRect(
-                EACH->windowRect.x() + mSettingsHelper->getCanvasXPos(),
-                EACH->windowRect.y() + mSettingsHelper->getCanvasYPos(),
-                mSettingsHelper->getCanvasWidth(),
-                mSettingsHelper->getCanvasHeight());
-            if (CANVAS_RECT.contains(pos)) {
-                uninitWinInfos(winInfos);
-                delete winInfo;
-                return true;
-            }
+            uninitWinInfos(winInfos);
+            delete winInfo;
+            return rect.contains(pos);
         }
 
-        // Can't get EACH->window image, assume it traps events.
-        XImage* windowImage = XGetImage(mDisplay, EACH->window,
-            pos.x(), pos.y(), 1, 1, XAllPlanes(), ZPixmap);
-        if (!windowImage) {
+        // If it contains the position, but the window doesn't
+        // receive input events there, we're not hovering it.
+        if (doesWindowReceiveClickAtPos(EACH->window,
+            pos.x(), pos.y())) {
             uninitWinInfos(winInfos);
             delete winInfo;
             return false;
-        } else {
-            // Non transparent prevents hover of any window
-            // underneath.
-            if (XGetPixel(windowImage, 0, 0) != 0) {
-                XDestroyImage(windowImage);
-                uninitWinInfos(winInfos);
-                delete winInfo;
-                return false;
-            }
-            XDestroyImage(windowImage);
         }
     }
 
@@ -936,6 +914,139 @@ XHelper::isWindowHovered(const Window window, const QPoint pos,
     uninitWinInfos(winInfos);
     delete winInfo;
     return false;
+}
+
+/**
+ * Checks if a specific point in global screen coordinates will
+ * land on an active hit-test area of a given window.
+ */
+bool XHelper::doesWindowReceiveClickAtPos(const Window window,
+    const int rootPosX, const int rootPosY) {
+    // Sanity check window.
+    if (window == None) {
+        return false;
+    }
+
+    // If unknown or hidden window, it can't receive clicks.
+    XWindowAttributes windowAttributes;
+    if (!XGetWindowAttributes(mDisplay, window, &windowAttributes) ||
+        windowAttributes.map_state != IsViewable) {
+        return false;
+    }
+
+    // InputOnly windows cannot receive mouse clicks or input events.
+    if (windowAttributes.c_class == InputOnly) {
+        return false;
+    }
+
+    // Check WM_HINTS (Client accepts input flag) for input allowed.
+    XWMHints* wmHints = XGetWMHints(mDisplay, window);
+    if (wmHints) {
+        if ((wmHints->flags & InputHint) && !wmHints->input) {
+            XFree(wmHints);
+            return false;
+        }
+        XFree(wmHints);
+    }
+
+    // Find toplevel of window for reparented decorations.
+    Window rootWindow = windowAttributes.root;
+    Window parent = None, rootRet = None;
+    Window* children = nullptr;
+    unsigned int numChildren;
+
+    Window current = window;
+    while (XQueryTree(mDisplay, current,
+        &rootRet, &parent, &children, &numChildren)) {
+        if (children) {
+            XFree(children);
+        }
+        if (parent == rootRet || parent == None) {
+            break;
+        }
+        current = parent;
+    }
+    Window topWindow = current;
+
+    // Convert root cursor coords to window toplevel.
+    int topWindowX, topWindowY;
+    Window topWindowsChild;
+    if (!XTranslateCoordinates(mDisplay, rootWindow,
+        topWindow, rootPosX, rootPosY,
+        &topWindowX, &topWindowY, &topWindowsChild)) {
+        return false;
+    }
+
+    // Positions outside the toplevel fail.
+    XWindowAttributes topAttributes;
+    if (!XGetWindowAttributes(mDisplay, topWindow,
+        &topAttributes)) {
+        return false;
+    }
+    if (topWindowX < 0 || topWindowY < 0 ||
+        topWindowX >= topAttributes.width ||
+        topWindowY >= topAttributes.height) {
+        return false;
+    }
+
+    // Resolve receiving window.
+    Window receivingWindow = topWindow;
+    int receiveX = topWindowX;
+    int receiveY = topWindowY;
+    if (topWindowsChild != None) {
+        receivingWindow = topWindowsChild;
+        Window unusedChild;
+        if (!XTranslateCoordinates(mDisplay, topWindow, receivingWindow,
+            topWindowX, topWindowY, &receiveX, &receiveY,
+            &unusedChild)) {
+            return false;
+        }
+    }
+
+    // If an input shape is defined but its total bounding box
+    // area is zero, it rejects input clicks.
+    int shapeBoundSet = 0, shapeInputSet = 0;
+    int xws, yws, xbs, ybs;
+    unsigned int wws, hws, wbs, hbs;
+    XShapeQueryExtents(mDisplay, receivingWindow,
+        &shapeBoundSet, &xws, &yws, &wws, &hws,
+        &shapeInputSet, &xbs, &ybs, &wbs, &hbs);
+    if (shapeInputSet && (wbs == 0 || hbs == 0)) {
+        return false;
+    }
+
+    // Standard window without shape overrides receives clicks.
+    int count = 0, ordering = 0;
+    XRectangle* rects = XShapeGetRectangles(mDisplay,
+        receivingWindow, ShapeInput, &count, &ordering);
+    if (!shapeInputSet || !rects) {
+        if (rects) {
+            XFree(rects);
+        }
+        return true;
+    }
+
+    // Input shape with no items, can't be clicked.
+    if (count == 0) {
+        XFree(rects);
+        return false;
+    }
+
+    // Else, iterate through custom input shapes.
+    bool foundReceiver = false;
+    for (int i = 0; i < count; ++i) {
+        if (receiveX >= rects[i].x &&
+            receiveX < rects[i].x + rects[i].width &&
+            receiveY >= rects[i].y &&
+            receiveY < rects[i].y + rects[i].height) {
+            foundReceiver = true;
+            break;
+        }
+    }
+
+    // Cleanup, & done.
+    XFree(rects);
+    return foundReceiver;
 }
 
 /**
