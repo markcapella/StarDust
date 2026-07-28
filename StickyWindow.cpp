@@ -344,24 +344,23 @@ StickyWindow::defineWindowOnFirstRun() {
 }
 
 /**
- * Set window type, which is normally "SplashScreen".
- *
- * TODO: ?? On KDE we use "Dock", as their "SplashScreen" window
- * doesn't support InputRectangles meaning we can't click buttons.
+ * Set window type as Dock. Awesome WM uses
+ * _NET_WM_WINDOW_TYPE_SPLASH.
  */
 void
 StickyWindow::setStickyWindowType() {
-    const QString THIS_WM_NAME = mXHelper->
-        getWindowManagerName().c_str();
+    // Just for Awesome WM.
+    const QString THIS_WM = mXHelper->getWindowManagerName().c_str();
+    const QString AWESOME_WM = "awesome";
 
-    const QString AWESOME_WM_NAME = "awesome";
-    if (THIS_WM_NAME == AWESOME_WM_NAME) {
+    if (THIS_WM == AWESOME_WM) {
         const Atom STICKY_WINDOW_TYPE = XInternAtom(mDisplay,
             "_NET_WM_WINDOW_TYPE_SPLASH", false);
         mXHelper->setWindowType(mX11Window, STICKY_WINDOW_TYPE);
         return;
     }
 
+    // The default.
     const Atom STICKY_WINDOW_TYPE = XInternAtom(mDisplay,
         "_NET_WM_WINDOW_TYPE_DOCK", false);
     mXHelper->setWindowType(mX11Window, STICKY_WINDOW_TYPE);
@@ -518,6 +517,10 @@ void
 StickyWindow::setHoveredPinButtonVisibility(
     const bool visibility) {
     if (mPinButton->isVisible() != visibility) {
+        if (visibility && !mSettingsHelper->getBoolSetting(
+            SettingsHelper::ENABLE_PIN_CONTROL)) {
+            return;
+        }
         mPinButton->setVisible(visibility);
         draw();
     }

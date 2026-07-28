@@ -147,10 +147,8 @@ class StickyWindow {
         void defineWindowOnFirstRun();
 
         /**
-         * Set window type, which is normally "SplashScreen".
-         *
-         * TODO: ?? On KDE we use "Dock", as their "SplashScreen" window
-         * doesn't support InputRectangles meaning we can't click buttons.
+         * Set window type as Dock. Awesome WM uses
+         * _NET_WM_WINDOW_TYPE_SPLASH.
          */
         void setStickyWindowType();
 

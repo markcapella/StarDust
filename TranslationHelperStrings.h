@@ -630,6 +630,13 @@ const QStringList TRANSLATION_SET_57 = { "Apply",
     "適用する", "Toepassen", "Aplicar", "Применять"
 };
 
+const QStringList TRANSLATION_SET_58 = { "Enable Pin Control",
+    "Aktivieren Sie die Pin-Steuerung", "Habilitar control de PIN",
+    "Activer le contrôle des broches", "Abilita controllo pin",
+    "ピン制御を有効にする", "Schakel pincontrole in",
+    "Ativar controle de pinos", "Включить управление контактами"
+};
+
 /**
  * One big set of Translation Sets.
  */
@@ -691,5 +698,6 @@ const vector<QStringList> ALL_TRANSLATIONS = {
     TRANSLATION_SET_54,
     TRANSLATION_SET_55,
     TRANSLATION_SET_56,
-    TRANSLATION_SET_57
+    TRANSLATION_SET_57,
+    TRANSLATION_SET_58
 };

@@ -29,6 +29,7 @@ class SettingsHelper {
         IC_QString ON_TOP_INSTEAD = "Stick to Top";
         IC_QString DIVIDER_1 = "divider01";
 
+        IC_QString ENABLE_PIN_CONTROL = "Enable Pin Control";
         IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
         IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
         IC_QString DIVIDER_2 = "divider02";
@@ -89,13 +90,19 @@ class SettingsHelper {
             },
 
             { .name = ON_TOP_INSTEAD,
-              .valueType = BOOL_VALUETYPE, .initialValue = "false",
+              .valueType = BOOL_VALUETYPE, .initialValue = "true",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
             { .name = DIVIDER_1,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = ENABLE_PIN_CONTROL,
+              .valueType = BOOL_VALUETYPE, .initialValue = "true",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
@@ -129,7 +136,7 @@ class SettingsHelper {
             },
 
             { .name = DIVIDER_3,
-              .valueType = DIVIDER_VALUETYPE, .initialValue = "10",
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
