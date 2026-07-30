@@ -50,6 +50,9 @@ static inline constexpr XRenderColor WHITE_RCOLOR =
 static inline constexpr XRenderColor GRAY_RCOLOR =
     { 0xd800, 0xd500, 0xd200, 0xffff };
 
+static inline constexpr XRenderColor RUBBERBAND_RCOLOR =
+    { 0xd200, 0xd800, 0xdc00, 0xffff };
+
 static inline constexpr XRenderColor RED_RCOLOR =
     { 0xffff, 0x0000, 0x0000, 0x8000 };
 static inline constexpr XRenderColor GREEN_RCOLOR =

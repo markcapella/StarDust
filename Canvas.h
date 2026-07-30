@@ -31,7 +31,7 @@ class Canvas {
         /**
          * Invalidate current canvas, forcing a redraw.
          */
-        void setCanvasVisibile() { mIsVisible = true; };
+        void setCanvasVisible() { mIsVisible = true; };
 
         /**
          * Draw the widget canvas, assumes cleared

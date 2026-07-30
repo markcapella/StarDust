@@ -88,31 +88,38 @@ StickyWindow::draw() {
         getIntSetting(SettingsHelper::PREFERRED_DESKTOP);
     if (VISIBLE_DESKTOP != -1 && PREFERRED_DESKTOP != -1 &&
         (VISIBLE_DESKTOP != PREFERRED_DESKTOP)) {
-        mCanvas->setCanvasHidden();
+        mCanvas->setCanvasHidden(); // Not on this desktop.
         eraseWindow();
         return;
     }
 
     // Draw rubberband instead of canvas while resizing.
     if (mIsSizingWindow) {
-        const int RUBBERBAND_OPACITY = 40;
-        const XRenderColor BLENDED_BACKGROUND = newRenderColor(
-            WHITE_RCOLOR.red, WHITE_RCOLOR.green,
-            WHITE_RCOLOR.blue, RUBBERBAND_OPACITY);
+        mCanvas->setCanvasHidden(); // By resize rubberband area.
+        const int RUBBERBAND_OPACITY = 255;
+        const XRenderColor RUBBERBAND_COLOR = newRenderColor(
+            BLACK_RCOLOR.red, BLACK_RCOLOR.green,
+            BLACK_RCOLOR.blue, RUBBERBAND_OPACITY);
+
+        const int RUBBERBAND_BACKGROUND_OPACITY = 128;
+        const XRenderColor RUBBERBAND_BACKGROUND_COLOR = newRenderColor(
+            RUBBERBAND_RCOLOR.red, RUBBERBAND_RCOLOR.green,
+            RUBBERBAND_RCOLOR.blue, RUBBERBAND_BACKGROUND_OPACITY);
+
         XRenderFillRectangle(mDisplay, PictOpSrc, renderPic,
-            &BLENDED_BACKGROUND, 0, 0, mSettingsHelper->
+            &RUBBERBAND_COLOR, 0, 0, mSettingsHelper->
             getWindowWidth(), mSettingsHelper->getWindowHeight());
-        XRenderFreePicture(mDisplay, renderPic);
-        XFlush(mDisplay);
-        return;
+        XRenderFillRectangle(mDisplay, PictOpSrc, renderPic,
+            &RUBBERBAND_BACKGROUND_COLOR, 1, 1, mSettingsHelper->
+            getWindowWidth() - 2, mSettingsHelper->getWindowHeight() - 2);
+    } else {
+        // Else, draw Canvas.
+        mCanvas->setCanvasVisible();
+        mCanvas->drawCanvas();
+        drawAllWindowButtons();
     }
 
     XRenderFreePicture(mDisplay, renderPic);
-    XFlush(mDisplay);
-
-    mCanvas->setCanvasVisibile();
-    mCanvas->drawCanvas();
-    drawAllWindowButtons();
     XFlush(mDisplay);
 }
 
@@ -822,6 +829,11 @@ StickyWindow::handleX11EventQueue() {
                     PointerMotionMask, GrabModeAsync,
                     GrabModeAsync, None, None, CurrentTime);
 
+                // Save initial window size.
+                mClickedWindowSize = QSize(
+                    mSettingsHelper->getWindowWidth(),
+                    mSettingsHelper->getWindowHeight());
+
                 // Save click position, clicked button position,
                 // and the offset of the two for the drag button
                 // and for the move button.
@@ -851,22 +863,29 @@ StickyWindow::handleX11EventQueue() {
                 // Release the cursor on exit.
                 XUngrabPointer(mDisplay, CurrentTime);
 
+                // Save final window size.
+                mUnClickedWindowSize = QSize(
+                    mSettingsHelper->getWindowWidth(),
+                    mSettingsHelper->getWindowHeight());
+
                 // If still hovering a control, release a click.
-                clickPressedHoveredButton(QPoint(
-                    event.xbutton.x, event.xbutton.y));
+                mUnClickedWindowPosition = QPoint(event.xbutton.x,
+                    event.xbutton.y);
+                clickPressedHoveredButton(mUnClickedWindowPosition);
 
                 if (mIsMovingWindow) {
                     mIsMovingWindow = false;
                     maybeAdjustWindowOverhang();
                 }
-
                 if (mIsSizingWindow) {
                     mIsSizingWindow = false;
-                    mCanvas->uninitCanvas();
-                    eraseWindow();
-                    updateAllWindowButtons();
-                    defineWindowCanvasPosition();
-                    defineWindowCanvasSize();
+                    if (mUnClickedWindowSize != mClickedWindowSize) {
+                        mCanvas->uninitCanvas();
+                        eraseWindow();
+                        updateAllWindowButtons();
+                        defineWindowCanvasPosition();
+                        defineWindowCanvasSize();
+                    }
                     draw();
                 }
 

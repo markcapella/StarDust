@@ -99,8 +99,12 @@ class StickyWindow {
         int mTranslatePosY = -1;
 
         // ButtonPress.
+        QSize mClickedWindowSize;
         QPoint mClickedWindowPosition;
         QPoint mClickedButtonPosition;
+
+        QSize mUnClickedWindowSize;
+        QPoint mUnClickedWindowPosition;
 
         QPoint mDragMoveButtonOffset{};
         QPoint mDragResizeButtonOffset{};

@@ -232,8 +232,8 @@ Star::changeSize() {
         return;
     }
 
-    erase();
     if (mCanvas->isCanvasVisible()) {
+        erase();
         randomizeSize();
         draw();
     }
@@ -250,8 +250,8 @@ Star::changePosition() {
         return;
     }
 
-    erase();
     if (mCanvas->isCanvasVisible()) {
+        erase();
         randomizePosition();
         draw();
     }
@@ -268,8 +268,8 @@ Star::changeColor() {
         return;
     }
 
-    erase();
     if (mCanvas->isCanvasVisible()) {
+        erase();
         randomizeColor();
         draw();
     }
