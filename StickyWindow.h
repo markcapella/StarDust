@@ -98,32 +98,18 @@ class StickyWindow {
         int mTranslatePosX = -1;
         int mTranslatePosY = -1;
 
-        // ButtonPress, ButtonRelease.
-        unsigned int mClickStatus = 0;
-
-        Window mRootWindow = None;
-        int mRootClickPositionX = -1;
-        int mRootClickPositionY = -1;
-
-        Window mClickWindow = None;
-        int mWindowClickPositionX = -1;
-        int mWindowClickPositionY = -1;
-
         // ButtonPress.
+        QPoint mClickedWindowPosition;
         QPoint mClickedButtonPosition;
+
+        QPoint mDragMoveButtonOffset{};
+        QPoint mDragResizeButtonOffset{};
 
         bool mIsMouseClicked = false;
         bool mIsSizingWindow = false;
         bool mIsMovingWindow = false;
 
-        QPoint mDragMoveButtonOffset{};
-        QPoint mDragResizeButtonOffset{};
-
         int mPreviousDesktop = -1;
-
-        //const std::chrono::milliseconds FRAME_DELAY(16);
-        //chrono::steady_clock::time_point mLastDrawFrameTime =
-        //    chrono::steady_clock::now();
 
         /**
          * Initialize Transparency & TrueColor 32.
@@ -177,6 +163,11 @@ class StickyWindow {
          * Draw all visible buttons.
          */
         void drawAllWindowButtons();
+
+        /**
+         * Cursor watcher detects user actions.
+         */
+        void setAllControlsVisibility();
 
         /**
          * Setter for PinButton visibility state.
@@ -260,11 +251,6 @@ class StickyWindow {
             const bool canvasNeedsRedraw);
 
         /**
-         * Cursor watcher detects user actions.
-         */
-        void cursorWatcherThread();
-
-        /**
          * Perform window drag.
          */
         void dragWindowToPoint(const QPoint position);
@@ -273,4 +259,11 @@ class StickyWindow {
          * Perform window resizing.
          */
         void resizeWindowToPoint(const QPoint position);
+
+        /**
+         * Determine if the current StickyWindow overhanges the screen
+         * (current desktop) edges and moves it entirely into window
+         * according to user pref.
+         */
+        void maybeAdjustWindowOverhang();
 };

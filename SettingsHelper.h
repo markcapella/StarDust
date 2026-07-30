@@ -24,9 +24,10 @@ class SettingsHelper {
         IC_QString APP_LANGUAGE = "Language";
         IC_QString DIVIDER_0 = "divider00";
 
-        IC_QString PREFERRED_DESKTOP = "Preferred Desktop";
-        IC_QString ALLOW_DESKTOP_DRAG = "Allow Desktop Drag";
         IC_QString ON_TOP_INSTEAD = "Stick to Top";
+        IC_QString ALLOW_DESKTOP_DRAG = "Allow Desktop Drag";
+        IC_QString PREFERRED_DESKTOP = "Preferred Desktop";
+        IC_QString DESKTOP_OVERHANG = "Allow Desktop Overhang";
         IC_QString DIVIDER_1 = "divider01";
 
         IC_QString ENABLE_PIN_CONTROL = "Enable Pin Control";
@@ -77,8 +78,8 @@ class SettingsHelper {
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .name = PREFERRED_DESKTOP,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "-1",
+            { .name = ON_TOP_INSTEAD,
+              .valueType = BOOL_VALUETYPE, .initialValue = "true",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
@@ -89,8 +90,14 @@ class SettingsHelper {
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .name = ON_TOP_INSTEAD,
-              .valueType = BOOL_VALUETYPE, .initialValue = "true",
+            { .name = PREFERRED_DESKTOP,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "-1",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = DESKTOP_OVERHANG,
+              .valueType = BOOL_VALUETYPE, .initialValue = "false",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },

@@ -10,7 +10,6 @@
     A colorful deep star field that twinkles and slowly
     changes on your desktop.
     
-    
     Desktop widgets with various views can be stuck in place to
     the desktop below other windows and display custom views with
     a transparent visual background such as Clocks, Reminders,
@@ -27,7 +26,7 @@
     
     StarDust & StickyWidgets won't present an item in your
     desktop panel, nor in your system tray. Mouse hover the
-    widget to reveal the Pin or Close button.
+    widget to reveal the Pin or Control buttons.
     
     
 !['screenshotBefore2'](https://github.com/markcapella/StarDust/blob/main/screenshot2Before.png)
@@ -52,11 +51,14 @@
 
 For Debian systems:
 
-    sudo apt install git cmake build-essential pkg-config qt6-base-dev libx11-dev libxft-dev libxfixes-dev libxext-dev libpng-dev
+    sudo apt install git cmake build-essential pkg-config qt6-base-dev \
+        libx11-dev libxft-dev libxfixes-dev libxext-dev libpng-dev
 
 For Fedora systems:
 
-    sudo dnf install git cmake gcc gcc-c++ make pkg-config qt6-devel libX11-devel libXft-devel libXfixes-devel libXext-devel libpng-devel
+    sudo dnf install git cmake gcc gcc-c++ make pkg-config qt6-devel \
+        libX11-devel libXft-devel libXfixes-devel libXext-devel \
+        libpng-devel
 
 ### Clone StarDust source folder.
 
@@ -65,29 +67,32 @@ For Fedora systems:
 ### CD into source repo.
 
     cd StarDust
-    
+
 ## Basic development.
 
+### Install.
     mkdir build
     cd build
     cmake ..
-
     make
-    make run
-
     sudo make install
+
+### Uninstall.
     sudo make uninstall
-    
     make clean
     cd ..
     rm -rf build
-    
+    rm -rf ~/.config/StarDust
     
 ## Usage after install.
 
+### GUI Desktop.
+* Click the StarDust desktop icon that's added to your systems menu under "Games".
+
+### Command Line.
+
     StarDust
-    
-    
+
 ## Translations are hard, but doable in this model.
 
 [The README](/translations/TRANSLATION_README.md)

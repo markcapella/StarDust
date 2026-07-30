@@ -50,7 +50,7 @@ RecentsHelper::getAppRecentsName() {
  */
 QString
 RecentsHelper::getAppLockPathName() {
-    return getenv("HOME") + QStringLiteral("/.local/") +
+    return getenv("HOME") + QStringLiteral("/.config/") +
         QString(APP_NAME) + QStringLiteral("/");
 }
 
@@ -68,7 +68,7 @@ RecentsHelper::getAppLockFileName() {
  */
 int
 RecentsHelper::lockRecentsProcessInfo() {
-    // Create .local folder path if not exist.
+    // Create .config folder path if not exist.
     QFileInfo fileInfo(getAppLockPathName());
     QDir dir = fileInfo.dir();
     if (!dir.exists()) {

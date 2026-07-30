@@ -334,7 +334,7 @@ SettingsHelper::getQSettings() {
  */
 QString
 SettingsHelper::getQSettingsFile() {
-    return getenv("HOME") + QStringLiteral("/.local/") +
+    return getenv("HOME") + QStringLiteral("/.config/") +
         QString(APP_NAME) + "/" + mRecentsHelper->
             getAppRecentsName() + QStringLiteral(".ini");
 }

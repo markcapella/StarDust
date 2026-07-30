@@ -187,8 +187,8 @@ StickyWindow::run() {
             break;
         }
 
-        // Support Move & Resize.
-        cursorWatcherThread();
+        // Custom hover logic for controls.
+        setAllControlsVisibility();
 
         // Support ConfigDialog loop.
         QCoreApplication::processEvents();
@@ -480,6 +480,45 @@ StickyWindow::drawAllWindowButtons() {
 }
 
 /**
+ * All screen cursor watcher to set hovered control buttons
+ * visibility.
+ */
+void
+StickyWindow::setAllControlsVisibility() {
+    // Find the cursor location.
+    Window rootWindow = None;
+    int rootX = -1;
+    int rootY = -1;
+    Window window = None;
+    int winX = -1;
+    int winY = -1;
+    unsigned int clickStatus = 0;
+
+    if (!XQueryPointer(mDisplay, mX11Window, &rootWindow, &window,
+        &rootX, &rootY, &winX, &winY, &clickStatus)) {
+        cout << XCOLOR_YELLOW << "Failed to query Cursor location." <<
+            XCOLOR_NORMAL << endl;
+        return;
+    }
+
+    // Set PinButton visibility if any of canvas hovered.
+    const QRect CANVAS_RECT = QRect(
+        mSettingsHelper->getWindowXPos() +
+            mSettingsHelper->getCanvasXPos(),
+        mSettingsHelper->getWindowYPos() +
+            mSettingsHelper->getCanvasYPos(),
+        mSettingsHelper->getCanvasWidth(),
+        mSettingsHelper->getCanvasHeight());
+    const QPoint CURSOR_ROOT_POSITION = QPoint(rootX, rootY);
+    const bool IS_CANVAS_HOVERED = mXHelper->isWindowRectHovered(
+        mX11Window, CANVAS_RECT, CURSOR_ROOT_POSITION);
+    setHoveredPinButtonVisibility(IS_CANVAS_HOVERED);
+
+    // Set all other controls visibility.
+    setHoveredControlButtonVisibility(CURSOR_ROOT_POSITION);
+}
+
+/**
  * Set visibility state of the four corner control buttons.
  */
 void
@@ -758,22 +797,23 @@ StickyWindow::handleX11EventQueue() {
                     event.xconfigure.width, event.xconfigure.height);
                 break;
 
+            case MotionNotify:
+                // Are we moving or sizing the window?
+                if (mIsMouseClicked) {
+                    if (isPressedButtonDraggable()) {
+                        dragWindowToPoint(QPoint(event.xmotion.x_root,
+                            event.xmotion.y_root));
+                        break;
+                    }
+                    if (isPressedButtonSizable()) {
+                        resizeWindowToPoint(QPoint(event.xmotion.x_root,
+                            event.xmotion.y_root));
+                        break;
+                    }
+                }
+                break;
+
             case ButtonPress:
-                // Find the cursor down location.
-                if (!XQueryPointer(mDisplay, mX11Window, &mRootWindow,
-                    &mClickWindow, &mRootClickPositionX,
-                    &mRootClickPositionY, &mWindowClickPositionX,
-                    &mWindowClickPositionY, &mClickStatus)) {
-                    break;
-                }
-
-                // Do pressed highlighting for pinbutton & controls.
-                mClickedButtonPosition = pressHoveredButton(
-                    QPoint(mWindowClickPositionX, mWindowClickPositionY));
-                if (mClickedButtonPosition == INVALID_POINT) {
-                    break;
-                }
-
                 // Grab the cursor on entry.
                 mIsMouseClicked = true;
 
@@ -782,36 +822,43 @@ StickyWindow::handleX11EventQueue() {
                     PointerMotionMask, GrabModeAsync,
                     GrabModeAsync, None, None, CurrentTime);
 
-                // Set cursor offset position within button @ start
-                // of move ... (Top left) corner distance.
-                mDragMoveButtonOffset = QPoint(
-                    mWindowClickPositionX - mClickedButtonPosition.x(),
-                    mWindowClickPositionY - mClickedButtonPosition.y());
+                // Save click position, clicked button position,
+                // and the offset of the two for the drag button
+                // and for the move button.
+                mClickedWindowPosition = QPoint(event.xbutton.x,
+                    event.xbutton.y);
+                mClickedButtonPosition = pressHoveredButton(
+                    mClickedWindowPosition);
+                if (mClickedButtonPosition == INVALID_POINT) {
+                    break;
+                }
 
-                // Set cursor offset position within button @ start
-                // of resizing ... (Bottom right) corner distance.
+                // Drag offset relative to top left button corner.
+                mDragMoveButtonOffset = QPoint(
+                    event.xbutton.x - mClickedButtonPosition.x(),
+                    event.xbutton.y - mClickedButtonPosition.y());
+
+                // Resize offset relative to bottom right button corner.
                 mDragResizeButtonOffset = QPoint(
-                    mWindowClickPositionX - mClickedButtonPosition.x() -
+                    event.xbutton.x - mClickedButtonPosition.x() -
                         Button::BUTTON_WIDTH,
-                    mWindowClickPositionY - mClickedButtonPosition.y() -
-                        Button::BUTTON_HEIGHT);
+                    event.xbutton.y - mClickedButtonPosition.y() -
+                        Button::BUTTON_HEIGHT
+                );
                 break;
 
             case ButtonRelease:
                 // Release the cursor on exit.
                 XUngrabPointer(mDisplay, CurrentTime);
 
-                // Find the cursor up location.
-                if (!XQueryPointer(mDisplay, mX11Window, &mRootWindow,
-                    &mClickWindow, &mRootClickPositionX, &mRootClickPositionY,
-                    &mWindowClickPositionX, &mWindowClickPositionY,
-                    &mClickStatus)) {
-                    break;
-                }
-
                 // If still hovering a control, release a click.
-                clickPressedHoveredButton(QPoint(mWindowClickPositionX,
-                    mWindowClickPositionY));
+                clickPressedHoveredButton(QPoint(
+                    event.xbutton.x, event.xbutton.y));
+
+                if (mIsMovingWindow) {
+                    mIsMovingWindow = false;
+                    maybeAdjustWindowOverhang();
+                }
 
                 if (mIsSizingWindow) {
                     mIsSizingWindow = false;
@@ -821,9 +868,6 @@ StickyWindow::handleX11EventQueue() {
                     defineWindowCanvasPosition();
                     defineWindowCanvasSize();
                     draw();
-                }
-                if (mIsMovingWindow) {
-                    mIsMovingWindow = false;
                 }
 
                 unPressAllWindowButtons();
@@ -880,6 +924,7 @@ void
 StickyWindow::receiveConfigDialogUpdatedEvent(
     const bool canvasNeedsRedraw) {
 
+    maybeAdjustWindowOverhang();
     setControlButtonsVisibility();
     setWindowStickPosition();
     rangeCheckPreferredDesktopSetting();
@@ -888,51 +933,6 @@ StickyWindow::receiveConfigDialogUpdatedEvent(
         mCanvas->eraseCanvas();
         mCanvas->uninitCanvas();
         draw();
-    }
-}
-
-/**
- * Cursor watcher detects user actions.
- */
-void
-StickyWindow::cursorWatcherThread() {
-    // Find the cursor location.
-    Window rootWindow = None;
-    int rootX = -1;
-    int rootY = -1;
-    Window window = None;
-    int winX = -1;
-    int winY = -1;
-
-    if (!XQueryPointer(mDisplay, mX11Window, &rootWindow, &window,
-        &rootX, &rootY, &winX, &winY, &mClickStatus)) {
-        cout << XCOLOR_YELLOW << "Failed to query Cursor location." <<
-            XCOLOR_NORMAL << endl;
-        return;
-    }
-
-    // Set PinButton visibility if any of canvas hovered.
-    const QRect CANVAS_RECT = QRect(
-        mSettingsHelper->getWindowXPos() + mSettingsHelper->getCanvasXPos(),
-        mSettingsHelper->getWindowYPos() + mSettingsHelper->getCanvasYPos(),
-        mSettingsHelper->getCanvasWidth(), mSettingsHelper->getCanvasHeight());
-    const QPoint CURSOR_ROOT_POSITION = QPoint(rootX, rootY);
-    const bool IS_CANVAS_HOVERED = mXHelper->isWindowRectHovered(
-        mX11Window, CANVAS_RECT, CURSOR_ROOT_POSITION);
-    setHoveredPinButtonVisibility(IS_CANVAS_HOVERED);
-
-    // Set all other controls visibility.
-    setHoveredControlButtonVisibility(CURSOR_ROOT_POSITION);
-
-    // Are we moving or sizing the window?
-    if (mIsMouseClicked) {
-        if (isPressedButtonDraggable()) {
-            dragWindowToPoint(CURSOR_ROOT_POSITION);
-            return;
-        }
-        if (isPressedButtonSizable()) {
-            resizeWindowToPoint(CURSOR_ROOT_POSITION);
-        }
     }
 }
 
@@ -1030,29 +1030,27 @@ StickyWindow::resizeWindowToPoint(const QPoint position) {
         mDragResizeButtonOffset.x(), DIFF_POSITION.y() -
         mDragResizeButtonOffset.y());
 
-    // Enforce window minimum size.
-    if (newWindowSize.width() <
-        mSettingsHelper-> getWindowMinimumWidth()) {
-        newWindowSize.setWidth(mSettingsHelper->
-            getWindowMinimumWidth());
-    }
-    if (newWindowSize.height() <
-        mSettingsHelper->getWindowMinimumHeight()) {
-        newWindowSize.setHeight(mSettingsHelper->
-            getWindowMinimumHeight());
-    };
+    // Enforce window min & max width.
+    const double SCREEN_WIDTH = WidthOfScreen(
+        DefaultScreenOfDisplay(mDisplay));
+    const double NEW_WINDOW_WIDTH = newWindowSize.width();
+    newWindowSize.setWidth(min(max(mSettingsHelper->
+        getWindowMinimumWidth(), NEW_WINDOW_WIDTH), SCREEN_WIDTH));
+
+    // Enforce window min & max height.
+    const double SCREEN_HEIGHT = HeightOfScreen(
+        DefaultScreenOfDisplay(mDisplay));
+    const double NEW_WINDOW_HEIGHT = newWindowSize.height();
+    newWindowSize.setHeight(min(max(mSettingsHelper->
+        getWindowMinimumHeight(), NEW_WINDOW_HEIGHT), SCREEN_HEIGHT));
 
     // Enforce window edges.
-    const int SCREEN_WIDTH = WidthOfScreen(DefaultScreenOfDisplay(
-        mDisplay));
     const int NEW_WINDOW_RIGHT_POS = mSettingsHelper->getWindowXPos() +
         newWindowSize.width();
     if (NEW_WINDOW_RIGHT_POS > SCREEN_WIDTH) {
         newWindowSize.setWidth(SCREEN_WIDTH - mSettingsHelper->
             getWindowXPos());
     }
-    const int SCREEN_HEIGHT = HeightOfScreen(DefaultScreenOfDisplay(
-        mDisplay));
     const int NEW_WINDOW_BOTTOM_POS = mSettingsHelper->getWindowYPos() +
         newWindowSize.height();
     if (NEW_WINDOW_BOTTOM_POS > SCREEN_HEIGHT) {
@@ -1074,4 +1072,74 @@ StickyWindow::resizeWindowToPoint(const QPoint position) {
 
     // Re-draw all & done.
     draw();
+}
+
+/**
+ * Determine if the current StickyWindow overhanges the screen
+ * (current desktop) edges and moves it entirely into window
+ * according to user pref.
+ */
+void
+StickyWindow::maybeAdjustWindowOverhang() {
+    // Determine screen size.
+    const int SCREEN_WIDTH = WidthOfScreen(DefaultScreenOfDisplay(
+        mDisplay));
+    const int SCREEN_HEIGHT = HeightOfScreen(DefaultScreenOfDisplay(
+        mDisplay));
+
+    // Determine window top-left corner.
+    QPoint* windowTopLeft = new QPoint(
+        mSettingsHelper->getWindowXPos(),
+        mSettingsHelper->getWindowYPos());
+
+    // Determine window bottom-right corner.
+    QPoint* windowBottomRight = new QPoint(
+        windowTopLeft->x() + mSettingsHelper->getWindowWidth() - 1,
+        windowTopLeft->y() + mSettingsHelper->getWindowHeight() - 1);
+
+    // Check for window overhang of desktop in left, top, &
+    // right, bottom directions.
+    bool doesWindowOverhang = false;
+
+    if (windowTopLeft->x() < 0) {
+        doesWindowOverhang = true;
+        const double LEFT_OVERHANG = -windowTopLeft->x();
+        windowTopLeft->setX(windowTopLeft->x() + LEFT_OVERHANG);
+        windowBottomRight->setX(windowBottomRight->x() + LEFT_OVERHANG);
+    }
+    if (windowTopLeft->y() < 0) {
+        doesWindowOverhang = true;
+        const double TOP_OVERHANG = -windowTopLeft->y();
+        windowTopLeft->setY(windowTopLeft->y() + TOP_OVERHANG);
+        windowBottomRight->setY(windowBottomRight->y() + TOP_OVERHANG);
+    }
+    if (windowBottomRight->x() >= SCREEN_WIDTH) {
+        doesWindowOverhang = true;
+        const double RIGHT_OVERHANG = windowBottomRight->x() -
+            SCREEN_WIDTH + 1;
+        windowTopLeft->setX(windowTopLeft->x() - RIGHT_OVERHANG);
+        windowBottomRight->setX(windowBottomRight->x() - RIGHT_OVERHANG);
+    }
+    if (windowBottomRight->y() >= SCREEN_HEIGHT) {
+        doesWindowOverhang = true;
+        const double BOTTOM_OVERHANG = windowBottomRight->y() -
+            SCREEN_HEIGHT + 1;
+        windowTopLeft->setY(windowTopLeft->y() - BOTTOM_OVERHANG);
+        windowBottomRight->setY(windowBottomRight->y() - BOTTOM_OVERHANG);
+    }
+
+    // If the window overhangs the desktop & it's not allowed, move to
+    // the safest position where all is on screen. resizeWindowToPoint()
+    // ensures the window is always smaller than screen / desktop size.
+    if (doesWindowOverhang) {
+        const bool ALLOW_OVERHANG = mSettingsHelper->
+            getBoolSetting(SettingsHelper::DESKTOP_OVERHANG);
+        if (!ALLOW_OVERHANG) {
+            mSettingsHelper->setWindowXPos(windowTopLeft->x());
+            mSettingsHelper->setWindowYPos(windowTopLeft->y());
+            XMoveWindow(mDisplay, mX11Window,
+                mSettingsHelper->getWindowXPos(),
+                mSettingsHelper->getWindowYPos());
+        }
+    }
 }

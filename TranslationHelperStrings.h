@@ -637,6 +637,14 @@ const QStringList TRANSLATION_SET_58 = { "Enable Pin Control",
     "Ativar controle de pinos", "Включить управление контактами"
 };
 
+const QStringList TRANSLATION_SET_59 = { "Allow Desktop Overhang",
+    "Desktop-Überhang zulassen", "Permitir exceso de escritorio",
+    "Autoriser le surplomb du bureau", "Consenti la sporgenza del desktop",
+    "デスクトップのオーバーハングを許可する", "Bureaubladoverhang toestaan",
+    "Permitir projeção da área de trabalho", "Разрешить выступ рабочего стола"
+};
+
+
 /**
  * One big set of Translation Sets.
  */
@@ -699,5 +707,6 @@ const vector<QStringList> ALL_TRANSLATIONS = {
     TRANSLATION_SET_55,
     TRANSLATION_SET_56,
     TRANSLATION_SET_57,
-    TRANSLATION_SET_58
+    TRANSLATION_SET_58,
+    TRANSLATION_SET_59
 };
