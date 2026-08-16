@@ -9,6 +9,13 @@ class XHelper {
     typedef int MapState;
 
     public:
+        struct WindowShapeResult {
+            int shapeInputSet;
+            unsigned int width;
+            unsigned int height;
+            bool success;
+        };
+
         /**
          * Constructor.
          */
@@ -213,22 +220,71 @@ class XHelper {
         bool isWindowDock(const Window window);
 
         /**
-         * This method determines if the mouse is hovered above
-         * our window and capable of clicking it in a rect @ a point.
+         * Determines if the mouse is hovered over the window's client area,
+         * respecting overlapping windows, frame decorations, and X11 input
+         * shape regions.
          */
-        bool isWindowRectHovered(const Window window, const QRect rect,
-            const QPoint pos);
+        bool isWindowHoveredAtPos(const Window stickyWindow,
+            const QRect rect, const QPoint pos);
+
+        /**
+         * Determines whether a specified target window receives hover.
+         * That means accept input at the given coordinates, accounting
+         * for client boundaries, input shape extensions, and visibility.
+         */
+        bool doesWindowReceiveHoverAtPos(const Window targetWindow,
+            const int rootPosX, const int rootPosY);
+
+        /**
+         * This method determines if the mouse is hovered above window
+         * and capable of clicking it in PinButton rect @ point.
+         */
+        bool isWindowClickableInPinButton(const Window stickyWindow,
+            const QRect rect, const QPoint pos);
 
         /**
          * Checks if a specific point in global screen coordinates will
          * land on an active hit-test area of a given window.
-         *
-         * Supports standard windows, decorated/undecorated windows,
-         * and windows with custom ShapeInput regions (like multi-button
-         * click-through windows).
          */
-        bool doesWindowReceiveClickAtPos(const Window window,
+        bool doesWindowReceiveClickInPinButton(const Window window,
             const int rootPosX, const int rootPosY);
+
+        /**
+         * This method determines if the mouse is hovered above window
+         * and capable of clicking it in ControlButton rect @ point.
+         */
+        bool isWindowClickableInControlButton(const Window stickyWindow,
+            const QRect rect, const QPoint pos);
+
+        /**
+         * Checks if a specific point in global screen coordinates will
+         * land on an active hit-test area of a given window.
+         */
+        bool doesWindowReceiveClickInControlButton(const Window window,
+            const int rootPosX, const int rootPosY,
+            const Window targetStickyWindow);
+
+        /**
+         * Find toplevel for reparented decorations.
+         */
+        Window getToplevelOfWindow(const Window window);
+
+        /**
+         * Queries and resolves XShape extents with an optional fallback.
+         */
+        WindowShapeResult getWindowShapeExtents(const Window eachWindow,
+            const Window receivingWindow);
+
+        /**
+         * Generic helper to query the shape extents for any given window.
+         */
+        WindowShapeResult queryWindowShape(const Window window);
+
+        /**
+         * Generic helper to query the shape extents for any given window.
+         */
+        QRect getEffectiveRect(const Window topWindow,
+            const QRect windowRect);
 
         /**
          * Place window in stack order to be on top

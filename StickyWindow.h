@@ -69,11 +69,6 @@ class StickyWindow {
             return mX11Window;
         }
 
-        /**
-         * Set visibility state of the four corner control buttons.
-         */
-        void setControlButtonsVisibility();
-
     private:
         // Members.
         Window mX11Window = None;
@@ -169,21 +164,26 @@ class StickyWindow {
         void drawAllWindowButtons();
 
         /**
-         * Cursor watcher detects user actions.
+         * All screen cursor watcher to set hovered control buttons
+         * visibility during hover.
          */
         void setAllControlsVisibility();
 
         /**
-         * Setter for PinButton visibility state.
+         * Set visibility state of the four corner control buttons on
+         * or off based on ConfigMode and update auto hide timer.
+         */
+        void setControlButtonsVisibility();
+
+        /**
+         * Setter for Hovered PinButton visibility state.
          */
         void setHoveredPinButtonVisibility(const bool visibility);
 
         /**
-         * While not in configMode, hovering a (hidden)
-         * Control button will make it visible & actionable.
+         * Setter for all other Hovered ControlButton visibility state.
          */
-        void setHoveredControlButtonVisibility(
-            const QPoint position);
+        void setHoveredControlButtonVisibility(const QPoint position);
 
         /**
          * Press hovered button, & return it's position.

@@ -14,8 +14,8 @@ set(APP_NAME "StarDust")
 set(APP_DESC "A colorful deep star field that twinkles and")
 set(APP_DESC "${APP_DESC} slowly changes on your desktop.")
 
-set(APP_VERSION "26.07.30")
-set(APP_VERSION_MINOR "00")
+set(APP_VERSION "26.08.15")
+set(APP_VERSION_MINOR "01")
 
 set(APP_AUTHOR "Mark James Capella")
 set(ORG_NAME "skyrmion.inc")
@@ -178,18 +178,6 @@ target_link_libraries(${WIDGET_PROJECT} PRIVATE
 #     -fsanitize=address)
 
 ##
-# Prevent sudo make install before make.
-#
-set(TARGET_NAME ${WIDGET_PROJECT})
-install(CODE "
-    set(BUILD_OUTPUT \"\${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}\")
-    if (NOT EXISTS \"\${BUILD_OUTPUT}\")
-        message(STATUS \"ERROR: Local build is not complete.\")
-        message(FATAL_ERROR \"First make this package, then \"
-            \"you can install it.\")
-    endif()")
-
-##
 # Halt any old active instances.
 #
 install(CODE "set(APP_NAME \"${APP_NAME}\")")
@@ -247,9 +235,9 @@ if (NOT TARGET uninstall)
     add_custom_target(uninstall
         COMMAND ${CMAKE_COMMAND}
             -DAPP_NAME=${APP_NAME}
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/haltObsolete.cmake
-                
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/haltObsolete.cmake"
+
         COMMAND ${CMAKE_COMMAND}
-            -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
+            -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     )
 endif()

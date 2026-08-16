@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+# Color styling.
+getColorCode() {
+    tput "$@" 2>/dev/null || true
+}
+
+COLOR_NORMAL=$(getColorCode sgr0)
+COLOR_BLACK=$(getColorCode setaf 0)
+COLOR_RED=$(getColorCode setaf 1)
+COLOR_GREEN=$(getColorCode setaf 2)
+COLOR_YELLOW=$(getColorCode setaf 3)
+COLOR_BLUE=$(getColorCode setaf 4)
+COLOR_MAGENTA=$(getColorCode setaf 5)
+COLOR_CYAN=$(getColorCode setaf 6)
+COLOR_WHITE=$(getColorCode setaf 7)
+
+TEXT_BOLD=$(getColorCode bold)
+
+##
+# cleanProj
+#
+    echo
+    echo  -e "${COLOR_GREEN}""Cleaning project.""${COLOR_NORMAL}"
+
+    PROJ="${1:-build}"
+    if [ ! "$PROJ" == "$1" ]; then
+        echo
+        echo -e "${COLOR_YELLOW}""   Assumes project as :"\
+            "$PROJ""${COLOR_NORMAL}"
+    fi
+
+    # Ensure it's not a file.
+    if [ -f "$PROJ" ]; then
+        echo
+        echo -e "${COLOR_YELLOW}""   That's a file, not a project folder"\
+            "---> ""$PROJ""${COLOR_NORMAL}"
+        echo
+        echo -e "${COLOR_GREEN}""Cleaning complete.""${COLOR_NORMAL}"
+        exit 1;
+    fi
+
+    # Ensure it's a relative subfolder of the project folder.
+    if [ ! -d "$PROJ" ]; then
+        echo
+        echo -e "${COLOR_YELLOW}""   No project build folder by that"\
+            "name exists ---> ""$PROJ""${COLOR_NORMAL}"
+        echo
+        echo -e "${COLOR_GREEN}""Cleaning complete.""${COLOR_NORMAL}"
+        exit 1;
+    fi
+
+
+    # Disallow projects with "..", otherwise we're good to remove.
+    case "$PROJ" in
+        /*|*..*)
+            echo
+            echo -e "${COLOR_YELLOW}""   I can't remove that project build"\
+                "folder for you, Please do it by hand.""${COLOR_NORMAL}"
+            echo
+            echo -e "${COLOR_GREEN}""   rm -rf ""$PROJ""${COLOR_NORMAL}"
+            RESULT=$?
+            ;;
+        *)
+            echo
+            echo -e "${COLOR_YELLOW}""   Removed project"\
+                "build folder:""---> ""$PROJ""${COLOR_NORMAL}"\
+                "${COLOR_NORMAL}"
+            rm -rf "$PROJ"
+            RESULT=$?
+            ;;
+    esac
+
+    echo
+    echo -e "${COLOR_GREEN}""Cleaning complete.""${COLOR_NORMAL}"
+    exit "$RESULT"

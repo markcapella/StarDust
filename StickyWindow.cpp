@@ -382,8 +382,15 @@ StickyWindow::setWindowStickPosition() {
     const bool PREFER_ONTOP = mSettingsHelper->getBoolSetting(
         SettingsHelper::ON_TOP_INSTEAD);
 
-    mXHelper->makeWindowStayOnTop(mX11Window, PREFER_ONTOP);
-    mXHelper->makeWindowStayOnBottom(mX11Window, !PREFER_ONTOP);
+    // Ensure below is explicitly turned off before enabling above.
+    if (PREFER_ONTOP) {
+        mXHelper->makeWindowStayOnBottom(mX11Window, false);
+        mXHelper->makeWindowStayOnTop(mX11Window, true);
+    } else {
+        // Ensure above is explicitly turned off before enabling below.
+        mXHelper->makeWindowStayOnTop(mX11Window, false);
+        mXHelper->makeWindowStayOnBottom(mX11Window, true);
+    }
 }
 
 /**
@@ -480,19 +487,27 @@ StickyWindow::drawAllWindowButtons() {
             rects.push_back(buttonInputRegion);
         }
     }
-    XShapeCombineRectangles(mDisplay, mX11Window, ShapeInput,
-        0, 0, rects.data(), rects.size(), ShapeSet, Unsorted);
+
+    // Explicitly set an empty input.
+    if (!rects.empty()) {
+        XShapeCombineRectangles(mDisplay, mX11Window, ShapeInput,
+            0, 0, rects.data(), rects.size(), ShapeSet, Unsorted);
+    } else {
+        XRectangle emptyRect = {0, 0, 0, 0};
+        XShapeCombineRectangles(mDisplay, mX11Window, ShapeInput,
+            0, 0, &emptyRect, 0, ShapeSet, Unsorted);
+    }
 
     XFlush(mDisplay);
 }
 
 /**
  * All screen cursor watcher to set hovered control buttons
- * visibility.
+ * visibility during hover.
  */
 void
 StickyWindow::setAllControlsVisibility() {
-    // Find the cursor location.
+    // Find the cursor location relative to the root window.
     Window rootWindow = None;
     int rootX = -1;
     int rootY = -1;
@@ -501,32 +516,51 @@ StickyWindow::setAllControlsVisibility() {
     int winY = -1;
     unsigned int clickStatus = 0;
 
-    if (!XQueryPointer(mDisplay, mX11Window, &rootWindow, &window,
-        &rootX, &rootY, &winX, &winY, &clickStatus)) {
+    if (!XQueryPointer(mDisplay, DefaultRootWindow(mDisplay),
+        &rootWindow, &window, &rootX, &rootY, &winX, &winY,
+        &clickStatus)) {
         cout << XCOLOR_YELLOW << "Failed to query Cursor location." <<
             XCOLOR_NORMAL << endl;
         return;
     }
 
-    // Set PinButton visibility if any of canvas hovered.
-    const QRect CANVAS_RECT = QRect(
-        mSettingsHelper->getWindowXPos() +
-            mSettingsHelper->getCanvasXPos(),
-        mSettingsHelper->getWindowYPos() +
-            mSettingsHelper->getCanvasYPos(),
-        mSettingsHelper->getCanvasWidth(),
-        mSettingsHelper->getCanvasHeight());
-    const QPoint CURSOR_ROOT_POSITION = QPoint(rootX, rootY);
-    const bool IS_CANVAS_HOVERED = mXHelper->isWindowRectHovered(
-        mX11Window, CANVAS_RECT, CURSOR_ROOT_POSITION);
-    setHoveredPinButtonVisibility(IS_CANVAS_HOVERED);
+    // Early out if not hovered anywhere.
+    const QPoint CURSOR_ROOT_POS = QPoint(rootX, rootY);
+    const QRect WINDOW_RECT = QRect(mSettingsHelper->getWindowXPos(),
+        mSettingsHelper->getWindowYPos(), mSettingsHelper->getWindowWidth(),
+        mSettingsHelper->getWindowHeight());
+    const bool IS_WINDOW_HOVERED = mXHelper->isWindowHoveredAtPos(
+        getX11Window(), WINDOW_RECT, CURSOR_ROOT_POS);
 
-    // Set all other controls visibility.
-    setHoveredControlButtonVisibility(CURSOR_ROOT_POSITION);
+    if (!IS_WINDOW_HOVERED) {
+        setHoveredPinButtonVisibility(false);
+        setHoveredControlButtonVisibility(QPoint(-1, -1));
+        return;
+    }
+
+    // Set visibility for Pin Button control. It's visible on
+    // window hovered and pinButtonEnabled or pinButton hovered.
+    const QRect PIN_BUTTON_RECT = QRect(
+        mSettingsHelper->getWindowXPos() + mButtons[0]->getX(),
+        mSettingsHelper->getWindowYPos() + mButtons[0]->getY(),
+        mButtons[0]->getWidth(),
+        mButtons[0]->getHeight());
+    const bool IS_PIN_BOTTON_CLICKABLE =
+        mXHelper->isWindowClickableInPinButton(
+            getX11Window(), PIN_BUTTON_RECT, CURSOR_ROOT_POS);
+
+    const bool PIN_VISIBILITY = mSettingsHelper->getBoolSetting(
+        SettingsHelper::ENABLE_PIN_CONTROL) ||
+        IS_PIN_BOTTON_CLICKABLE;
+    setHoveredPinButtonVisibility(PIN_VISIBILITY);
+
+    // Set visibility for all other controls.
+    setHoveredControlButtonVisibility(CURSOR_ROOT_POS);
 }
 
 /**
- * Set visibility state of the four corner control buttons.
+ * Set visibility state of the four corner control buttons on
+ * or off based on ConfigMode and update auto hide timer.
  */
 void
 StickyWindow::setControlButtonsVisibility() {
@@ -557,24 +591,20 @@ StickyWindow::setControlButtonsVisibility() {
 }
 
 /**
- * Setter for PinButton visibility state.
+ * Setter for Hovered PinButton visibility state.
  */
 void
 StickyWindow::setHoveredPinButtonVisibility(
     const bool visibility) {
+
     if (mPinButton->isVisible() != visibility) {
-        if (visibility && !mSettingsHelper->getBoolSetting(
-            SettingsHelper::ENABLE_PIN_CONTROL)) {
-            return;
-        }
         mPinButton->setVisible(visibility);
         draw();
     }
 }
 
 /**
- * While not in configMode, hovering a (hidden)
- * corner button will make it visible & actionable.
+ * Setter for all other Hovered ControlButton visibility state.
  */
 void
 StickyWindow::setHoveredControlButtonVisibility(
@@ -594,8 +624,11 @@ StickyWindow::setHoveredControlButtonVisibility(
             mSettingsHelper->getWindowYPos() + mButtons[i]->getY(),
             mButtons[i]->getWidth(), mButtons[i]->getHeight());
 
-        if (mXHelper->isWindowRectHovered(getX11Window(), BUTTON_RECT,
-            position)) {
+        const bool PIN_VISIBILITY =
+            mXHelper->isWindowClickableInControlButton(getX11Window(),
+                BUTTON_RECT, position);
+
+        if (PIN_VISIBILITY) {
             if (!mButtons[i]->isVisible()) {
                 mButtons[i]->setVisible(true);
                 redrawRequired = true;

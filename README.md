@@ -71,19 +71,23 @@ For Fedora systems:
 ## Basic development.
 
 ### Install.
-    mkdir build
-    cd build
-    cmake ..
-    make
-    sudo make install
+    ./startProj
+
+    # Will run startProj if reqd.
+    ./buildProj
+
+    # Will run both startProj & buildProj if reqd.
+    ./installProj
 
 ### Uninstall.
-    sudo make uninstall
-    make clean
-    cd ..
-    rm -rf build
-    rm -rf ~/.config/StarDust
+    ./uninstallProj
+
+    # Same as rm -rf build
+    ./cleanProj
     
+    # App config.
+    rm -rf ~/.config/StarDust
+
 ## Usage after install.
 
 ### GUI Desktop.

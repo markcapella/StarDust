@@ -1,2 +1,2 @@
 
-execute_process(COMMAND bash ../haltObsoleteInstances ${APP_NAME})
+execute_process(COMMAND bash "${CMAKE_CURRENT_LIST_DIR}/haltObsoleteInstances" ${APP_NAME})
