@@ -185,7 +185,7 @@ XHelper::getCompositorName() {
 
     const Atom UTF8_STRING = XInternAtom(mDisplay, "UTF8_STRING", False);
     if (XGetWindowProperty(mDisplay, WINDOW_OWNER, mAtomGetWMName,
-        0, 1024, False, UTF8_STRING, &actual_type, &actual_format, 
+        0, 1024, False, UTF8_STRING, &actual_type, &actual_format,
         &nitems, &bytes_after, &prop_name) == Success && prop_name) {
         string name(reinterpret_cast<char*>(prop_name));
         XFree(prop_name);
@@ -312,7 +312,7 @@ XHelper::setVisibleDesktop(const long desktop) {
 
     event.xclient.format = 32;
     event.xclient.data.l[0] = desktop;
-    event.xclient.data.l[1] = CurrentTime; 
+    event.xclient.data.l[1] = CurrentTime;
     event.xclient.data.l[2] = 0;
     event.xclient.data.l[3] = 0;
     event.xclient.data.l[4] = 0;
@@ -1522,8 +1522,8 @@ XHelper::makeWindowStayOnTop(const Window window,
     event.xclient.data.l[0] = onOrOff ? 1 : 0;
     event.xclient.data.l[1] = NET_WM_STATE_ABOVE;
 
-    event.xclient.data.l[2] = 0; 
-    event.xclient.data.l[3] = 1; 
+    event.xclient.data.l[2] = 0;
+    event.xclient.data.l[3] = 1;
     event.xclient.data.l[4] = 0;
 
     XSendEvent(mDisplay, DefaultRootWindow(mDisplay), False,
@@ -1553,8 +1553,8 @@ XHelper::makeWindowStayOnBottom(const Window window,
     event.xclient.data.l[0] = onOrOff ? 1 : 0;
     event.xclient.data.l[1] = NET_WM_STATE_BELOW;
 
-    event.xclient.data.l[2] = 0; 
-    event.xclient.data.l[3] = 1; 
+    event.xclient.data.l[2] = 0;
+    event.xclient.data.l[3] = 1;
     event.xclient.data.l[4] = 0;
 
     XSendEvent(mDisplay, DefaultRootWindow(mDisplay), False,

@@ -218,10 +218,10 @@ NOTA: Seu Gerenciador de Janelas (WM) é um gerenciador de janelas em mosaico. I
 HINWEIS: Ihr Fenstermanager (WM) erlaubt es Ihnen nicht, durch Widgets, die von StickyWidgetIII erstellt wurden, hindurchzuklicken.
 NOTA: Su gestor de ventanas (WM) no le permitirá hacer clic a través de los widgets basados en StickyWidgetIII.
 REMARQUE : Votre gestionnaire de fenêtres (WM) ne vous permettra pas de cliquer à travers les widgets basés sur StickyWidgetIII.
-NOTA: Il tuo Window Manager (WM) non ti permetterà di cliccare attraverso i widget basati su StickyWidgetIII.                                                                                
+NOTA: Il tuo Window Manager (WM) non ti permetterà di cliccare attraverso i widget basati su StickyWidgetIII.
 注意: あなたのウィンドウマネージャー（WM）は、StickyWidgetIIIベースのウィジェットをクリックで通過させることを許可しません。
-OPMERKING: Uw Window Manager (WM) staat niet toe dat u door StickyWidgetIII gebaseerde widgets heen klikt.                                                                                   
-NOTA: Seu Gerenciador de Janelas (WM) não permitirá que você clique através de widgets do StickyWidgetIII.                                                                                   
+OPMERKING: Uw Window Manager (WM) staat niet toe dat u door StickyWidgetIII gebaseerde widgets heen klikt.
+NOTA: Seu Gerenciador de Janelas (WM) não permitirá que você clique através de widgets do StickyWidgetIII.
 ПРИМЕЧАНИЕ: Ваш оконный менеджер (WM) не позволит вам кликать сквозь виджеты, созданные с помощью StickyWidgetIII.
 "one"
 eins

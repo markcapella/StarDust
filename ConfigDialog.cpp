@@ -407,7 +407,7 @@ ConfigDialog::createConfigDialog() {
                     // ToolTip, as updates happen during window drag and
                     // pointer is nowhere near the slider at that point.
                     const QPoint LOCAL_POSITION = sliderEditWidget->
-                        rect().center(); 
+                        rect().center();
                     const QPoint GLOBAL_POSITION = sliderEditWidget->
                         mapToGlobal(LOCAL_POSITION);
                     const QString TOOLTIP_TEXT = (value == -1) ?

@@ -110,6 +110,10 @@ class StickyWindow {
 
         int mPreviousDesktop = -1;
 
+        // Optimization to avoid needless cursor raycasts.
+        QPoint mCursorPrevHoverPosition{ -1, -1 };
+        QPoint mCursorHoverPosition{};
+
         /**
          * Initialize Transparency & TrueColor 32.
          */
@@ -164,10 +168,10 @@ class StickyWindow {
         void drawAllWindowButtons();
 
         /**
-         * All screen cursor watcher to set hovered control buttons
-         * visibility during hover.
+         * Cursor watcher detects user actions. Optimizes for
+         * cursor location, but requires reset on x11 activity.
          */
-        void setAllControlsVisibility();
+        void setAllControlsVisibility(const bool optimize);
 
         /**
          * Set visibility state of the four corner control buttons on
