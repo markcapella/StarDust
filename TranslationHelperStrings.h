@@ -644,6 +644,41 @@ const QStringList TRANSLATION_SET_59 = { "Allow Desktop Overhang",
     "Permitir projeção da área de trabalho", "Разрешить выступ рабочего стола"
 };
 
+const QStringList SVG_CREDITS_LINE_SET = {
+    "StarImage SVG shapes provided by",
+    "StarImage SVG-Formen bereitgestellt von",
+    "Formas SVG de StarImage proporcionadas por",
+    "Formes SVG StarImage fournies par",
+    "Forme SVG di StarImage fornite da",
+    "StarImage の SVG 形状は次によって提供されています",
+    "StarImage SVG-vormen geleverd door",
+    "Formas SVG StarImage fornecidas por",
+    "SVG-формы StarImage предоставлены"
+};
+
+const QStringList SVG_CREDITS_NAME_LINE_SET = {
+    "Tiny Online Tools",
+    "Winzige Online-Tools",
+    "Pequeñas Herramientas en Línea",
+    "Petits Outils en Ligne",
+    "Piccoli Strumenti Online",
+    "小さなオンラインツール",
+    "Kleine Online Tools",
+    "Pequenas Ferramentas Online",
+    "Крошечные онлайн-инструменты"
+};
+
+const QStringList STAR_IMAGE_SET = {
+    "Star Image",
+    "Sternbild",
+    "Imagen de estrella",
+    "Image d'étoile",
+    "Immagine della stella",
+    "星の画像",
+    "Sterafbeelding",
+    "Imagem da Estrela",
+    "Изображение звезды"
+};
 
 /**
  * One big set of Translation Sets.
@@ -708,5 +743,8 @@ const vector<QStringList> ALL_TRANSLATIONS = {
     TRANSLATION_SET_56,
     TRANSLATION_SET_57,
     TRANSLATION_SET_58,
-    TRANSLATION_SET_59
+    TRANSLATION_SET_59,
+    SVG_CREDITS_LINE_SET,
+    SVG_CREDITS_NAME_LINE_SET,
+    STAR_IMAGE_SET
 };

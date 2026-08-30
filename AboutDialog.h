@@ -22,6 +22,9 @@ class AboutDialog : public QDialog {
             "herbstluftwm"
         };
 
+        /**
+         * Constructor.
+         */
         explicit AboutDialog(QWidget* parent = nullptr);
 
     protected:
@@ -35,4 +38,7 @@ class AboutDialog : public QDialog {
         void closeEvent(QCloseEvent* event) override;
 
     private:
+        /**
+         * Members.
+         */
 };

@@ -20,38 +20,46 @@ class SettingsHelper {
     #define IC_QString static inline const QString
 
     public:
-        // Configurable.
-        IC_QString APP_LANGUAGE = "Language";
+        /**
+         * Configurable.
+         *
+         * NOTE: Any change here may affect |canvasNeedsRedraw| in
+         * ConfigDialog::acceptConfigDialog(). Do check it!
+         */
+        IC_QString STAR_IMAGE = "Star Image";
         IC_QString DIVIDER_0 = "divider00";
-
-        IC_QString ON_TOP_INSTEAD = "Stick to Top";
-        IC_QString ALLOW_DESKTOP_DRAG = "Allow Desktop Drag";
-        IC_QString PREFERRED_DESKTOP = "Preferred Desktop";
-        IC_QString DESKTOP_OVERHANG = "Allow Desktop Overhang";
-        IC_QString DIVIDER_1 = "divider01";
-
-        IC_QString ENABLE_PIN_CONTROL = "Enable Pin Control";
-        IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
-        IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
-        IC_QString DIVIDER_2 = "divider02";
-
-        IC_QString BACKGROUND_COLOR = "Background Color";
-        IC_QString BACKGROUND_OPACITY = "Background Opacity";
-        IC_QString DIVIDER_3 = "divider03";
 
         IC_QString MAX_STAR_SIZE = "Star Size Maximum";
         IC_QString STAR_SATURATION = "Starfield Saturation";
-        IC_QString DIVIDER_4 = "divider04";
-
-        IC_QString SIZE_CHANGE_DELAY = "Size Change Delay";
-        IC_QString POSITION_CHANGE_DELAY = "Position Change Delay";
-        IC_QString COLOR_CHANGE_DELAY = "Color Change Delay";
-        IC_QString DIVIDER_5 = "divider05";
+        IC_QString DIVIDER_1 = "divider01";
 
         IC_QString STAR_COLOR_COOL = "Star Color Cool";
         IC_QString STAR_COLOR_WARM = "Star Color Warm";
         IC_QString STAR_COLOR_MEDIUM = "Star Color Medium";
         IC_QString STAR_COLOR_HOT = "Star Color Hot";
+        IC_QString DIVIDER_3 = "divider03";
+
+        IC_QString SIZE_CHANGE_DELAY = "Size Change Delay";
+        IC_QString POSITION_CHANGE_DELAY = "Position Change Delay";
+        IC_QString COLOR_CHANGE_DELAY = "Color Change Delay";
+        IC_QString DIVIDER_2 = "divider02";
+
+        IC_QString BACKGROUND_COLOR = "Background Color";
+        IC_QString BACKGROUND_OPACITY = "Background Opacity";
+        IC_QString DIVIDER_4 = "divider04";
+
+        IC_QString APP_LANGUAGE = "Language";
+        IC_QString DIVIDER_5 = "divider05";
+
+        IC_QString ON_TOP_INSTEAD = "Stick to Top";
+        IC_QString ALLOW_DESKTOP_DRAG = "Allow Desktop Drag";
+        IC_QString PREFERRED_DESKTOP = "Preferred Desktop";
+        IC_QString DESKTOP_OVERHANG = "Allow Desktop Overhang";
+        IC_QString DIVIDER_6 = "divider06";
+
+        IC_QString ENABLE_PIN_CONTROL = "Enable Pin Control";
+        IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
+        IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
 
 
         // Settings property struct.
@@ -63,123 +71,37 @@ class SettingsHelper {
             int rangeMaximum = numeric_limits<int>::max();
         };
 
-        // App configurables. Entries determine order of
-        // appearance in Dialog.
+        /**
+         * App configurables. Entries determine order of
+         * appearance in Dialog.
+         *
+         * NOTE: Any change here may affect |canvasNeedsRedraw| in
+         * ConfigDialog::acceptConfigDialog(). Do check it!
+         */
         static inline const vector<SettingsProperty> PROPERTIES = {
-            { .name = APP_LANGUAGE,
-              .valueType = COMBOBOX_VALUETYPE, .initialValue = "en",
+            { .name = STAR_IMAGE,
+              .valueType = COMBOBOX_VALUETYPE, .initialValue = "Capella",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
-
             { .name = DIVIDER_0,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .name = ON_TOP_INSTEAD,
-              .valueType = BOOL_VALUETYPE, .initialValue = "true",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = ALLOW_DESKTOP_DRAG,
-              .valueType = BOOL_VALUETYPE, .initialValue = "true",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = PREFERRED_DESKTOP,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "-1",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = DESKTOP_OVERHANG,
-              .valueType = BOOL_VALUETYPE, .initialValue = "false",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = DIVIDER_1,
-              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = ENABLE_PIN_CONTROL,
-              .valueType = BOOL_VALUETYPE, .initialValue = "true",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = AUTOHIDE_CONTROLS,
-              .valueType = BOOL_VALUETYPE, .initialValue = "false",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = AUTOHIDE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "4",
-              .rangeMinimum = 1, .rangeMaximum = 9
-            },
-
-            { .name = DIVIDER_2,
-              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = BACKGROUND_COLOR,
-              .valueType = COLOR_VALUETYPE, .initialValue = "#0055ff",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = BACKGROUND_OPACITY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "50",
-              .rangeMinimum = 0, .rangeMaximum = 255
-            },
-
-            { .name = DIVIDER_3,
-              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
             { .name = MAX_STAR_SIZE,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "15",
-              .rangeMinimum = 5, .rangeMaximum = 40
+              .valueType = SLIDER_VALUETYPE, .initialValue = "40",
+              /* Slider max changes here need to be updated in
+                 ../resources/svgToStarImage, and have new shape
+                 headers generated by ./makeAllSvgsIntoStarImages */
+              .rangeMinimum = 15, .rangeMaximum = 60
             },
-
             { .name = STAR_SATURATION,
               .valueType = SLIDER_VALUETYPE, .initialValue = "25",
               .rangeMinimum = 5, .rangeMaximum = 100
             },
-
-            { .name = DIVIDER_4,
-              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
-              .rangeMinimum = numeric_limits<int>::min(),
-              .rangeMaximum = numeric_limits<int>::max()
-            },
-
-            { .name = COLOR_CHANGE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
-              .rangeMinimum = 1, .rangeMaximum = 2000
-            },
-
-            { .name = SIZE_CHANGE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
-              .rangeMinimum = 1, .rangeMaximum = 2000
-            },
-
-            { .name = POSITION_CHANGE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
-              .rangeMinimum = 1, .rangeMaximum = 2000
-            },
-
-            { .name = DIVIDER_5,
+            { .name = DIVIDER_1,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
@@ -190,24 +112,116 @@ class SettingsHelper {
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
-
             { .name = STAR_COLOR_WARM,
               .valueType = COLOR_VALUETYPE, .initialValue = "#FFBF00",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
-
             { .name = STAR_COLOR_MEDIUM,
               .valueType = COLOR_VALUETYPE, .initialValue = "#ff7b08",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
             },
-
             { .name = STAR_COLOR_HOT,
               .valueType = COLOR_VALUETYPE, .initialValue = "#ff1170",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = DIVIDER_2,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = COLOR_CHANGE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
+              .rangeMinimum = 1, .rangeMaximum = 2000
+            },
+            { .name = SIZE_CHANGE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "300",
+              .rangeMinimum = 1, .rangeMaximum = 2000
+            },
+            { .name = POSITION_CHANGE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
+              .rangeMinimum = 1, .rangeMaximum = 2000
+            },
+            { .name = DIVIDER_3,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = BACKGROUND_COLOR,
+              .valueType = COLOR_VALUETYPE, .initialValue = "#0055ff",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = BACKGROUND_OPACITY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "50",
+              .rangeMinimum = 0, .rangeMaximum = 255
+            },
+            { .name = DIVIDER_4,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = APP_LANGUAGE,
+              .valueType = COMBOBOX_VALUETYPE, .initialValue = "en",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = DIVIDER_5,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = ON_TOP_INSTEAD,
+              .valueType = BOOL_VALUETYPE, .initialValue = "false",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = ALLOW_DESKTOP_DRAG,
+              .valueType = BOOL_VALUETYPE, .initialValue = "true",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = PREFERRED_DESKTOP,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "-1",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = DESKTOP_OVERHANG,
+              .valueType = BOOL_VALUETYPE, .initialValue = "false",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = DIVIDER_6,
+              .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+
+            { .name = ENABLE_PIN_CONTROL,
+              .valueType = BOOL_VALUETYPE, .initialValue = "true",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = AUTOHIDE_CONTROLS,
+              .valueType = BOOL_VALUETYPE, .initialValue = "false",
+              .rangeMinimum = numeric_limits<int>::min(),
+              .rangeMaximum = numeric_limits<int>::max()
+            },
+            { .name = AUTOHIDE_DELAY,
+              .valueType = SLIDER_VALUETYPE, .initialValue = "4",
+              .rangeMinimum = 1, .rangeMaximum = 9
             }
+        };
+
+        // Combobox definitions, nouns, no translate.
+        static inline const QStringList ALL_STAR_IMAGES = {
+            "American", "Capella", "Patrick", "Throwing", "Trek"
         };
 
         SettingsHelper();
@@ -324,13 +338,14 @@ class SettingsHelper {
         QSettings* getQSettings();
 
     private:
-        // Members.
-        QString mSettingsApp = "";
-
-        QSettings* mQSettings = nullptr;
-
         /**
          * Helper to return a QSettings filename from appName.
          */
         QString getQSettingsFile();
+
+        /**
+         * Members.
+         */
+        QString mSettingsApp = "";
+        QSettings* mQSettings = nullptr;
 };

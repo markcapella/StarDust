@@ -21,7 +21,7 @@ TEXT_BOLD=$(getColorCode bold)
 # uninstallProj
 #
     echo
-    echo  -e "${COLOR_GREEN}""Uninstalling project.""${COLOR_NORMAL}"
+    echo -e "${COLOR_GREEN}""Uninstalling project.""${COLOR_NORMAL}"
 
     PROJ="${1:-build}"
     if [ ! "$PROJ" == "$1" ]; then

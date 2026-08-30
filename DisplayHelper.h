@@ -17,6 +17,8 @@ class DisplayHelper {
         Display* getDisplay();
 
     private:
-        // Members.
+        /**
+         * Members.
+         */
         Display* mDisplay = nullptr;
 };

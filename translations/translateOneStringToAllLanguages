@@ -1,14 +1,81 @@
 #!/bin/bash
 
-##
-# Script to translate a single string to multi languages.
-#
+# Color styling.
+getColorCode() {
+    tput "$@" 2>/dev/null || true
+}
 
-trans -b -j :de $1
-trans -b -j :es $1
-trans -b -j :fr $1
-trans -b -j :it $1
-trans -b -j :ja $1
-trans -b -j :nl $1
-trans -b -j :pt $1
-trans -b -j :ru $1
+COLOR_NORMAL=$(getColorCode sgr0)
+COLOR_BLACK=$(getColorCode setaf 0)
+COLOR_RED=$(getColorCode setaf 1)
+COLOR_GREEN=$(getColorCode setaf 2)
+COLOR_YELLOW=$(getColorCode setaf 3)
+COLOR_BLUE=$(getColorCode setaf 4)
+COLOR_MAGENTA=$(getColorCode setaf 5)
+COLOR_CYAN=$(getColorCode setaf 6)
+COLOR_WHITE=$(getColorCode setaf 7)
+
+TEXT_BOLD=$(getColorCode bold)
+
+##
+# startPanelWithSanitizerBuild
+#
+    echo
+    echo -e "${COLOR_GREEN}""Translating one string to all languages."\
+        "${COLOR_NORMAL}"
+
+    # Ensure there's a string to translate.
+    if [[ "$1" == "" ]]; then
+        echo
+        echo -e "${COLOR_YELLOW}""   try: |"$0" \"Hello World\"|"\
+            "${COLOR_NORMAL}"
+        echo
+        echo -e "${COLOR_GREEN}""Translating one string to all"\
+            "languages complete.""${COLOR_NORMAL}"
+        exit 1
+    fi
+
+    # Collect translations & error codes.
+    echo
+    echo -n "   "
+    echo -n "8... "; TEXT_de=$(trans -e bing -b -j :de $1); RESULT_TEXT_de=$?
+    echo -n "7... "; TEXT_es=$(trans -e bing -b -j :es $1); RESULT_TEXT_es=$?
+    echo -n "6... "; TEXT_fr=$(trans -e bing -b -j :fr $1); RESULT_TEXT_fr=$?
+    echo -n "5... "; TEXT_it=$(trans -e bing -b -j :it $1); RESULT_TEXT_it=$?
+    echo -n "4... "; TEXT_ja=$(trans -e bing -b -j :ja $1); RESULT_TEXT_ja=$?
+    echo -n "3... "; TEXT_nl=$(trans -e bing -b -j :nl $1); RESULT_TEXT_nl=$?
+    echo -n "2... "; TEXT_pt=$(trans -e bing -b -j :pt $1); RESULT_TEXT_pt=$?
+    echo -n "1... "; TEXT_ru=$(trans -e bing -b -j :ru $1); RESULT_TEXT_ru=$?
+    echo "done!"
+    echo
+
+    # TODO: Any one triggers error, try again :(
+    if [[ "$RESULT_TEXT_de" != "0" || "$RESULT_TEXT_es" != "0" || \
+          "$RESULT_TEXT_fr" != "0" || "$RESULT_TEXT_it" != "0" || \
+          "$RESULT_TEXT_ja" != "0" || "$RESULT_TEXT_nl" != "0" || \
+          "$RESULT_TEXT_pt" != "0" || "$RESULT_TEXT_ru" != "0" ]]; then
+        echo
+        echo -e "${COLOR_YELLOW}""   Failure detected, please try"\
+            "again soon.${COLOR_NORMAL}"
+        echo
+        echo -e "${COLOR_GREEN}""Translating one string to all"\
+            "languages complete.""${COLOR_NORMAL}"
+        exit 2
+    fi
+
+    # Summarize result for TranslationHelperStrings.h
+    echo "const QStringList FOO = {"
+    echo "    \"""$1""\","
+    echo "    \"""$TEXT_de""\","
+    echo "    \"""$TEXT_es""\","
+    echo "    \"""$TEXT_fr""\","
+    echo "    \"""$TEXT_it""\","
+    echo "    \"""$TEXT_ja""\","
+    echo "    \"""$TEXT_nl""\","
+    echo "    \"""$TEXT_pt""\","
+    echo "    \"""$TEXT_ru""\""
+    echo "};"
+
+    echo
+    echo -e "${COLOR_GREEN}""Translating one string to all"\
+            "languages complete.""${COLOR_NORMAL}"

@@ -18,26 +18,14 @@ COLOR_WHITE=$(getColorCode setaf 7)
 TEXT_BOLD=$(getColorCode bold)
 
 ##
-# buildProj
+# startPanelWithLocale
 #
     echo
-    echo -e "${COLOR_GREEN}""Building project.""${COLOR_NORMAL}"
+    echo -e "${COLOR_GREEN}""Starting panel with locale."\
+        "${COLOR_NORMAL}"
 
-    PROJ="${1:-build}"
-    if [ ! "$PROJ" == "$1" ]; then
-        echo
-        echo -e "${COLOR_YELLOW}""   Assumes project as :"\
-            "$PROJ""${COLOR_NORMAL}"
-    fi
-
-    if [ ! -d "$PROJ" ]; then
-        ./startProj "$PROJ"
-        echo
-    fi
-
-    cmake --build "$PROJ"
-    RESULT=$?
+    for f in $(ls *.svg); do ./svgToStarImage $f; done
 
     echo
-    echo -e "${COLOR_GREEN}""Build complete.""${COLOR_NORMAL}"
-    exit "$RESULT"
+    echo -e "${COLOR_GREEN}""Starting panel with locale complete."\
+        "${COLOR_NORMAL}"

@@ -22,7 +22,7 @@ StickyWindow::StickyWindow() {
     createAllWindowButtons();
 
     // Instantiate widget canvas.
-    mCanvas = new Canvas(getX11Window(), mButtons);
+    mCanvas = new Canvas(getX11Window(), mRenderPicture, mButtons);
     setControlButtonsVisibility();
 
     // Create autohide timer for control buttons,
@@ -39,7 +39,7 @@ StickyWindow::StickyWindow() {
  * StickyWindow destructor, cleanup Window object.
  */
 StickyWindow::~StickyWindow() {
-    lock_guard<recursive_mutex> lock(mButtonsMutLock);
+    lock_guard<recursive_mutex> lock(gX11Mutex);
 
     mCanvas->uninitCanvas();
     delete mCanvas;
@@ -53,6 +53,11 @@ StickyWindow::~StickyWindow() {
     // Uninit all.
     if (mIsVisuallyTransparent) {
         XFreeColormap(mDisplay, mColorMap);
+    }
+
+    if (mRenderPicture) {
+        XRenderFreePicture(mDisplay, mRenderPicture);
+        mRenderPicture = {};
     }
 
     if (mX11Window != None) {
@@ -77,11 +82,6 @@ StickyWindow::show() {
  */
 void
 StickyWindow::draw() {
-    const XRenderPictFormat* RENDER_FORMAT =
-        XRenderFindVisualFormat(mDisplay, mVisualInfoStruct.visual);
-    Picture renderPic = XRenderCreatePicture(mDisplay, mX11Window,
-        RENDER_FORMAT, 0, nullptr);
-
     // If drawing on wrong desktop, erase instead.
     const int VISIBLE_DESKTOP = mXHelper->getVisibleDesktop();
     const int PREFERRED_DESKTOP = mSettingsHelper->
@@ -106,10 +106,10 @@ StickyWindow::draw() {
             RUBBERBAND_RCOLOR.red, RUBBERBAND_RCOLOR.green,
             RUBBERBAND_RCOLOR.blue, RUBBERBAND_BACKGROUND_OPACITY);
 
-        XRenderFillRectangle(mDisplay, PictOpSrc, renderPic,
+        XRenderFillRectangle(mDisplay, PictOpSrc, mRenderPicture,
             &RUBBERBAND_COLOR, 0, 0, mSettingsHelper->
             getWindowWidth(), mSettingsHelper->getWindowHeight());
-        XRenderFillRectangle(mDisplay, PictOpSrc, renderPic,
+        XRenderFillRectangle(mDisplay, PictOpSrc, mRenderPicture,
             &RUBBERBAND_BACKGROUND_COLOR, 1, 1, mSettingsHelper->
             getWindowWidth() - 2, mSettingsHelper->getWindowHeight() - 2);
     } else {
@@ -119,7 +119,6 @@ StickyWindow::draw() {
         drawAllWindowButtons();
     }
 
-    XRenderFreePicture(mDisplay, renderPic);
     XFlush(mDisplay);
 }
 
@@ -128,17 +127,10 @@ StickyWindow::draw() {
  */
 void
 StickyWindow::eraseWindow() {
-    const XRenderPictFormat* RENDER_FORMAT =
-        XRenderFindVisualFormat(mDisplay, mVisualInfoStruct.visual);
-    Picture renderPic = XRenderCreatePicture(mDisplay, mX11Window,
-        RENDER_FORMAT, 0, nullptr);
-
-    XRenderFillRectangle(mDisplay, PictOpSrc, renderPic,
+    XRenderFillRectangle(mDisplay, PictOpSrc, mRenderPicture,
         &TRANSPARENT_RCOLOR, 0, 0, mSettingsHelper->
         getWindowWidth(), mSettingsHelper->getWindowHeight());
 
-    // Cleanup & done.
-    XRenderFreePicture(mDisplay, renderPic);
     XFlush(mDisplay);
 }
 
@@ -239,7 +231,7 @@ Window
 StickyWindow::createX11Window() {
     // Determine if Widget first time run.
     const bool INITIAL_RUN = QPoint(mSettingsHelper->getWindowXPos(),
-        mSettingsHelper->getWindowYPos()) == INVALID_POINT;
+        mSettingsHelper->getWindowYPos()) == INVALID_POSITION;
 
     // Initial setup for Widget first time run.
     if (INITIAL_RUN) {
@@ -326,6 +318,11 @@ StickyWindow::createX11Window() {
     XConfigureWindow(mDisplay, mX11Window,
         CWX | CWY | CWWidth | CWHeight, &changes);
     XFlush(mDisplay);
+
+    // Create global render picture;
+    mRenderPicture = XRenderCreatePicture(mDisplay, mX11Window,
+        XRenderFindStandardFormat(mDisplay, PictStandardARGB32),
+            0, nullptr);
 
     // Done!
     return mX11Window;
@@ -502,8 +499,8 @@ StickyWindow::drawAllWindowButtons() {
 }
 
 /**
- * Cursor watcher detects user actions. Optimizes for
- * cursor location, but requires reset on x11 activity.
+ * Cursor watcher makes visible any Pin button or corner
+ * Control button visible the mouse is hovering.
  */
 void
 StickyWindow::setAllControlsVisibility(const bool optimize) {
@@ -667,7 +664,7 @@ StickyWindow::pressHoveredButton(const QPoint position) {
                 mButtons[i]->getY());
         }
     }
-    return INVALID_POINT;
+    return INVALID_POSITION;
 }
 
 /**
@@ -883,7 +880,7 @@ StickyWindow::handleX11EventQueue() {
                     event.xbutton.y);
                 mClickedButtonPosition = pressHoveredButton(
                     mClickedWindowPosition);
-                if (mClickedButtonPosition == INVALID_POINT) {
+                if (mClickedButtonPosition == INVALID_POSITION) {
                     break;
                 }
 

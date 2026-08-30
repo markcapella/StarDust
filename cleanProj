@@ -21,7 +21,7 @@ TEXT_BOLD=$(getColorCode bold)
 # cleanProj
 #
     echo
-    echo  -e "${COLOR_GREEN}""Cleaning project.""${COLOR_NORMAL}"
+    echo -e "${COLOR_GREEN}""Cleaning project.""${COLOR_NORMAL}"
 
     PROJ="${1:-build}"
     if [ ! "$PROJ" == "$1" ]; then
@@ -64,7 +64,7 @@ TEXT_BOLD=$(getColorCode bold)
         *)
             echo
             echo -e "${COLOR_YELLOW}""   Removed project"\
-                "build folder:""---> ""$PROJ""${COLOR_NORMAL}"\
+                "build folder ---> ""$PROJ""${COLOR_NORMAL}"\
                 "${COLOR_NORMAL}"
             rm -rf "$PROJ"
             RESULT=$?

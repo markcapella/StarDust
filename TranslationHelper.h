@@ -16,5 +16,7 @@ class TranslationHelper {
         QString getTranslationOf(const QString english);
 
     private:
-        // Members.
+        /**
+         * Members.
+         */
 };

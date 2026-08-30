@@ -35,13 +35,16 @@ class ColorButton : public QPushButton {
         void colorChanged(const QColor &newColor);
 
     private:
-        QString mTitle;
-
-        QColor mColor;
-
         /**
          * Set base ColorButton to color selected in
          * ColorPicker.
          */
         void updateButtonStyle();
+
+        /**
+         * Members.
+         */
+        QString mTitle;
+
+        QColor mColor;
 };

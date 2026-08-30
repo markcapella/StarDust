@@ -364,7 +364,9 @@ class XHelper {
             event);
 
     private:
-        // Members.
+        /**
+         * Members.
+         */
         string mPrevEventSerialString = "";
         string mEventSerialString = "         ";
 

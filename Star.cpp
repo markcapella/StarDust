@@ -4,14 +4,14 @@
 /**
  * Star(s) are the main objects in the view.
  */
-Star::Star(const Window window, const std::vector<Button*> buttons,
-    QObject* parent) : QObject(parent) {
+Star::Star(const Window window,  const Picture picture,
+    const std::vector<Button*> buttons, QObject* parent) :
+    QObject(parent) {
 
     mWindow = window;
+    mRenderPicture = picture;
     mWindowButtons = buttons;
 
-    // After setting initial size, we can randomize
-    // position, then randomize color.
     randomizeSize();
     randomizePosition();
     randomizeColor();
@@ -21,55 +21,17 @@ Star::Star(const Window window, const std::vector<Button*> buttons,
 }
 
 /**
- * Set this star @ a random screen size.
+ * Destructor.
  */
-void
-Star::randomizeSize() {
-    const int MAX_SIZE_DESIRED = mSettingsHelper->
-        getIntSetting(SettingsHelper::MAX_STAR_SIZE);
+Star::~Star() {
+    if (mStarImageMonoPicture) {
+        XRenderFreePicture(mDisplay, mStarImageMonoPicture);
+        mStarImageMonoPicture = {};
+    }
 
-    const int MAX_SIZE_MINIMUM = mSettingsHelper->
-        getSettingsIntRangeMinimum(SettingsHelper::MAX_STAR_SIZE);
-    const int MAX_RANGE = MAX_SIZE_DESIRED - MAX_SIZE_MINIMUM;
-
-    mSize = MAX_SIZE_MINIMUM + randomIntegerUpTo(MAX_RANGE);
-}
-
-/**
- * Set this star @ a random screen position.
- */
-void
-Star::randomizePosition() {
-    const int CANVAS_X_POS = mSettingsHelper->getCanvasXPos();
-    const int CANVAS_Y_POS = mSettingsHelper->getCanvasYPos();
-
-    const int CANVAS_WIDTH = mSettingsHelper->getCanvasWidth();
-    const int CANVAS_HEIGHT = mSettingsHelper->getCanvasHeight();
-
-    const int MAX_SIZE = mSettingsHelper->
-        getIntSetting(SettingsHelper::MAX_STAR_SIZE);
-
-    setXPos(CANVAS_X_POS + randomIntegerUpTo(CANVAS_WIDTH - MAX_SIZE));
-    setYPos(CANVAS_Y_POS + randomIntegerUpTo(CANVAS_HEIGHT - MAX_SIZE));
-}
-
-/**
- * Set this star @ a random screen color.
- */
-void
-Star::randomizeColor() {
-    switch (randomIntegerUpTo(AVAILABLE_STAR_COLORS)) {
-        case 0: mColor = mSettingsHelper->getColorSetting(
-            SettingsHelper::STAR_COLOR_COOL);
-            break;
-        case 1: mColor = mSettingsHelper->getColorSetting(
-            SettingsHelper::STAR_COLOR_WARM);
-            break;
-        case 2: mColor = mSettingsHelper->getColorSetting(
-            SettingsHelper::STAR_COLOR_MEDIUM);
-            break;
-        case 3: mColor = mSettingsHelper->getColorSetting(
-            SettingsHelper::STAR_COLOR_HOT);
+    if (mStarImageColorPicture) {
+        XRenderFreePicture(mDisplay, mStarImageColorPicture);
+        mStarImageColorPicture = {};
     }
 }
 
@@ -78,46 +40,28 @@ Star::randomizeColor() {
  */
 void
 Star::draw() {
-    // Avoid drawing in visible corners.
-    const float STAR_SIZE = getSize();
-    const int POS_OFFSET = (mSettingsHelper->getIntSetting(
-        SettingsHelper::MAX_STAR_SIZE) - STAR_SIZE) / 2;
-    const QRect STAR_RECT = QRect(getXPos() + POS_OFFSET,
-        getYPos() + POS_OFFSET, STAR_SIZE, STAR_SIZE);
+    lock_guard<recursive_mutex> lock(gX11Mutex);
 
+    // Avoid drawing in visible corners.
+    const int LEFT = getXPos();
+    const int TOP = getYPos();
+
+    const QRect STAR_RECT(LEFT, TOP, mSize, mSize);
     const int BUTTONS_COUNT = mWindowButtons.size();
     for (int i = 0; i < BUTTONS_COUNT; i++) {
-        const QRect BUTTON_RECT = mWindowButtons[i]->getQRect();
+        const QRect BUTTON_RECT =
+            mWindowButtons[i]->getQRect();
         if (BUTTON_RECT.intersects(STAR_RECT)) {
             mIsVisible = false;
             return;
         }
     }
 
-    // Draw.
-    Picture canvasPic = XRenderCreatePicture(mDisplay,
-        mWindow, XRenderFindStandardFormat(mDisplay,
-        PictStandardARGB32), 0, nullptr);
-    const XRenderColor STAR_RCOLOR = getColor();
+    XRenderComposite(mDisplay, PictOpOver, mStarImageColorPicture,
+        mStarImageMonoPicture, mRenderPicture, 0, 0, 0, 0,
+        LEFT, TOP, Star::mSize, Star::mSize);
+    XSync(mDisplay, False);
 
-    for (int i = 0; i < STAR_SIZE; i++) {
-        XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
-            &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
-            getYPos() + POS_OFFSET + i, 1, 1);
-        XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
-            &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
-            getYPos() + POS_OFFSET + STAR_SIZE - i - 1, 1, 1);
-    }
-
-    const int MID_POINT = (STAR_SIZE - 1) / 2;
-    XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
-        &STAR_RCOLOR, getXPos() + POS_OFFSET + 1,
-        getYPos() + POS_OFFSET + MID_POINT, STAR_SIZE - 2, 1);
-    XRenderFillRectangle(mDisplay, PictOpOver, canvasPic,
-        &STAR_RCOLOR, getXPos() + POS_OFFSET + MID_POINT,
-        getYPos() + POS_OFFSET + 1, 1, STAR_SIZE - 2);
-
-    XRenderFreePicture(mDisplay, canvasPic);
     mIsVisible = true;
 }
 
@@ -130,71 +74,27 @@ Star::erase() {
         return;
     }
 
-    // Erase.
-    Picture canvasPic = XRenderCreatePicture(mDisplay,
-        mWindow, XRenderFindStandardFormat(mDisplay,
-        PictStandardARGB32), 0, nullptr);
+    lock_guard<recursive_mutex> lock(gX11Mutex);
+
     const XRenderColor BACKGROUND_COLOR = mSettingsHelper->
         getColorSetting(SettingsHelper::BACKGROUND_COLOR);
-    const int BACKGROUND_OPACITY = mSettingsHelper->
-        getIntSetting(SettingsHelper::BACKGROUND_OPACITY);
+
+    const int BACKGROUND_OPACITY = mSettingsHelper->getIntSetting(
+        SettingsHelper::BACKGROUND_OPACITY);
+
     const XRenderColor STAR_RCOLOR = newRenderColor(
         BACKGROUND_COLOR.red, BACKGROUND_COLOR.green,
         BACKGROUND_COLOR.blue, BACKGROUND_OPACITY);
 
-    const float STAR_SIZE = getSize();
-    const int POS_OFFSET = (mSettingsHelper->getIntSetting(
-        SettingsHelper::MAX_STAR_SIZE) - STAR_SIZE) / 2;
+    XRenderFillRectangle(mDisplay, PictOpSrc, mRenderPicture,
+        &STAR_RCOLOR, getXPos(), getYPos(), mSize, mSize);
 
-    for (int i = 0; i < STAR_SIZE; i++) {
-        XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
-            &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
-            getYPos() + POS_OFFSET + i, 1, 1);
-        XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
-            &STAR_RCOLOR, getXPos() + POS_OFFSET + i,
-            getYPos() + POS_OFFSET + STAR_SIZE - i - 1, 1, 1);
+    // Safely trigger neighbor redraws while locked
+    if (mCanvas) {
+        mCanvas->redrawIntersectingStars(this);
     }
 
-    const int MID_POINT = (STAR_SIZE - 1) / 2;
-    XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
-        &STAR_RCOLOR, getXPos() + POS_OFFSET + 1,
-        getYPos() + POS_OFFSET + MID_POINT, STAR_SIZE - 2, 1);
-    XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
-        &STAR_RCOLOR, getXPos() + POS_OFFSET + MID_POINT,
-        getYPos() + POS_OFFSET + 1, 1, STAR_SIZE - 2);
-
-    XRenderFreePicture(mDisplay, canvasPic);
     mIsVisible = false;
-}
-
-/**
- * Create & start this Stars timer objects.
- */
-void
-Star::createAndStartChangeTimers() {
-    // Create & start Size Change timer.
-    mSizeChangeTimer = new QTimer(this);
-    mSizeChangeTimer->setInterval(100);
-    connect(mSizeChangeTimer, &QTimer::timeout, this, [this]() {
-        changeSize(); });
-    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
-        mSizeChangeTimer->start(); });
-
-    // Create & start Position Change timer.
-    mPositionChangeTimer = new QTimer(this);
-    mPositionChangeTimer->setInterval(100);
-    connect(mPositionChangeTimer, &QTimer::timeout, this, [this]() {
-       changePosition(); });
-    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
-        mPositionChangeTimer->start(); });
-
-    // Create & start Color Change timer.
-    mColorChangeTimer = new QTimer(this);
-    mColorChangeTimer->setInterval(100);
-    connect(mColorChangeTimer, &QTimer::timeout, this, [this]() {
-        changeColor(); });
-    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
-        mColorChangeTimer->start(); });
 }
 
 /**
@@ -222,6 +122,137 @@ Star::stopChangeTimers() {
 }
 
 /**
+ * Create & start this Stars timer objects.
+ */
+void
+Star::createAndStartChangeTimers() {
+    // Create & start Size Change timer.
+    mSizeChangeTimer = new QTimer(this);
+    mSizeChangeTimer->setInterval(1);
+    connect(mSizeChangeTimer, &QTimer::timeout, this, [this]() {
+        changeSize();
+    });
+    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
+        mSizeChangeTimer->start(); });
+
+    // Create & start Position Change timer.
+    mPositionChangeTimer = new QTimer(this);
+    mPositionChangeTimer->setInterval(100);
+    connect(mPositionChangeTimer, &QTimer::timeout, this, [this]() {
+        changePosition();
+    });
+    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
+        mPositionChangeTimer->start(); });
+
+    // Create & start Color Change timer.
+    mColorChangeTimer = new QTimer(this);
+    mColorChangeTimer->setInterval(100);
+    connect(mColorChangeTimer, &QTimer::timeout, this, [this]() {
+        changeColor();
+    });
+    QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
+        mColorChangeTimer->start(); });
+}
+
+/**
+ * Set this star @ a random screen size.
+ */
+void
+Star::randomizeSize() {
+    const int MINIMUM = mSettingsHelper->getSettingsIntRangeMinimum(
+        SettingsHelper::MAX_STAR_SIZE);
+    const int MAXIMUM = mSettingsHelper->getIntSetting(
+        SettingsHelper::MAX_STAR_SIZE);
+
+    // First time, uninit-ed.
+    if (mSize == -1) {
+        mSize = randomIntegerUpTo(MAXIMUM - MINIMUM + 1) + MINIMUM;
+        randomizePosition();
+
+    // Else, random chance to decrease visual size.
+    } else if (randomIntegerUpTo(2) == 0) {
+        const int NEW_SIZE = mSize - 4;
+        if (NEW_SIZE < MINIMUM) { return; } else {
+            mSize = NEW_SIZE;
+            if (mPosition != INVALID_POSITION) {
+                setXPos(getXPos() + 2);
+                setYPos(getYPos() + 2);
+            }
+        }
+
+    // Else, increase visual size.
+    } else {
+        const int NEW_SIZE = mSize + 4;
+        if (NEW_SIZE > MAXIMUM) { return; } else {
+            mSize = NEW_SIZE;
+            if (mPosition != INVALID_POSITION) {
+                setXPos(getXPos() - 2);
+                setYPos(getYPos() - 2);
+            }
+        }
+    }
+
+    // Set new mono star image.
+    const QString STAR_IMAGE = mSettingsHelper->
+        getStringSetting(SettingsHelper::STAR_IMAGE);
+    const int STAR_IMAGE_INDEX = SettingsHelper::
+        SettingsHelper::ALL_STAR_IMAGES.indexOf(STAR_IMAGE);
+    setStarImageMonoPicture(AllStarImageCollection
+        [STAR_IMAGE_INDEX][mSize - MINIMUM]
+    );
+
+    // Update it's color counterpart.
+    setStarImageColorPicture();
+}
+
+/**
+ * Set this star @ a random screen position.
+ */
+void
+Star::randomizePosition() {
+    // First time, set size, and guard position.
+    if (mSize == -1) {
+        const int MINIMUM = mSettingsHelper->
+            getSettingsIntRangeMinimum(SettingsHelper::MAX_STAR_SIZE);
+        const int MAXIMUM = mSettingsHelper->
+            getIntSetting(SettingsHelper::MAX_STAR_SIZE);
+        mSize = randomIntegerUpTo(MAXIMUM - MINIMUM) + MINIMUM;
+    }
+
+    // Then, pick a position for the size.
+    const int CANVAS_X_POS = mSettingsHelper->getCanvasXPos();
+    const int CANVAS_Y_POS = mSettingsHelper->getCanvasYPos();
+
+    const int CANVAS_WIDTH = mSettingsHelper->getCanvasWidth();
+    const int CANVAS_HEIGHT = mSettingsHelper->getCanvasHeight();
+
+    setXPos(CANVAS_X_POS + randomIntegerUpTo(CANVAS_WIDTH - mSize));
+    setYPos(CANVAS_Y_POS + randomIntegerUpTo(CANVAS_HEIGHT - mSize));
+}
+
+/**
+ * Set this star @ a random screen color.
+ */
+void
+Star::randomizeColor() {
+    switch (randomIntegerUpTo(AVAILABLE_STAR_COLORS)) {
+        case 0: mColor = mSettingsHelper->getColorSetting(
+            SettingsHelper::STAR_COLOR_COOL);
+            break;
+        case 1: mColor = mSettingsHelper->getColorSetting(
+            SettingsHelper::STAR_COLOR_WARM);
+            break;
+        case 2: mColor = mSettingsHelper->getColorSetting(
+            SettingsHelper::STAR_COLOR_MEDIUM);
+            break;
+        case 3: mColor = mSettingsHelper->getColorSetting(
+            SettingsHelper::STAR_COLOR_HOT);
+    }
+
+    setStarImageColorPicture();
+}
+
+/**
  * Update this star @ a random screen size from
  * its current size.
  */
@@ -233,9 +264,12 @@ Star::changeSize() {
     }
 
     if (mCanvas->isCanvasVisible()) {
-        erase();
-        randomizeSize();
-        draw();
+        if (mDebugCount < 99999) {
+            mDebugCount++;
+            erase();
+            randomizeSize();
+            draw();
+        }
     }
 }
 
@@ -273,4 +307,101 @@ Star::changeColor() {
         randomizeColor();
         draw();
     }
+}
+
+/**
+ * Set StarImage mono Picture from mono color images array.
+ */
+void
+Star::setStarImageMonoPicture(const StarImage& image) {
+    XRenderPictFormat* format = XRenderFindStandardFormat(
+        mDisplay, PictStandardA8);
+
+    // Create XImage of StarImage size.
+    XImage* ximage = XCreateImage(mDisplay, DefaultVisual(mDisplay,
+        DefaultScreen(mDisplay)), 8, ZPixmap, 0, nullptr,
+        image.size, image.size, 8, image.size);
+    if (!ximage) {
+        return;
+    }
+
+    // Copy StarImage into XImage.
+    ximage->data = reinterpret_cast<char*>(const_cast<unsigned char*>
+        (image.pixels));
+
+    // Create 8-bit Pixmap of StarImage size.
+    Pixmap pixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
+        image.size, image.size, 8);
+    if (pixmap == None) {
+        ximage->data = nullptr;
+        XDestroyImage(ximage);
+        return;
+    }
+
+    // Copy XImage into Pixmap.
+    GC gc = XCreateGC(mDisplay, pixmap, 0, nullptr);
+    XPutImage(mDisplay, pixmap, gc, ximage, 0, 0, 0, 0,
+        image.size, image.size);
+    XFreeGC(mDisplay, gc);
+    ximage->data = nullptr;
+    XDestroyImage(ximage);
+
+    // Create Picture from Pixmap.
+    Picture picture = XRenderCreatePicture(mDisplay, pixmap, format,
+        0, nullptr);
+    XFreePixmap(mDisplay, pixmap);
+
+    // Destroy any previous mono Picture, assign new.
+    if (mStarImageMonoPicture) {
+        XRenderFreePicture(mDisplay, mStarImageMonoPicture);
+    }
+    mStarImageMonoPicture = picture;
+}
+
+/**
+ * Set StarImage color Picture, by applying it's color
+ * to its mono Picture.
+ */
+void
+Star::setStarImageColorPicture() {
+    // Destroy any prev color picture.
+    if (mStarImageColorPicture) {
+        XRenderFreePicture(mDisplay, mStarImageColorPicture);
+    }
+
+    // Create this color picture.
+    Pixmap pixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
+        Star::mSize, Star::mSize, 32);
+
+    XRenderPictFormat* format = XRenderFindStandardFormat(mDisplay,
+        PictStandardARGB32);
+
+    Picture picture = XRenderCreatePicture(mDisplay, pixmap, format,
+        0, nullptr);
+
+    XRenderFillRectangle(mDisplay, PictOpSrc, picture, &mColor,
+        0, 0, Star::mSize, Star::mSize);
+
+    XFreePixmap(mDisplay, pixmap);
+
+    // Assign new.
+    mStarImageColorPicture = picture;
+}
+
+/**
+ * Debug a StarImage's pixel data.
+ */
+void
+Star::debugStarImage(const StarImage& image) {
+
+    QString outputMessage = QString("StarImage %1x%1:\n").arg(image.size);
+    for (int y = 0; y < image.size; y++) {
+        for (int x = 0; x < image.size; x++) {
+            const unsigned VALUE = image.pixels[y * image.size + x];
+            outputMessage += QString("%1 ").arg(VALUE, 2, 16, QChar('0'));
+        }
+        outputMessage += '\n';
+    }
+
+    cout << outputMessage.toStdString();
 }

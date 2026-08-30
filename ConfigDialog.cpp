@@ -222,18 +222,32 @@ ConfigDialog::loadConfigDialog() {
         }
 
         // Get QComboBox for Language.
-        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE &&
-            THIS_KEY == SettingsHelper::APP_LANGUAGE) {
-            QComboBox* langComboWidget = nullptr;
-            langComboWidget = qobject_cast<QComboBox*>(mFormLayout->
-                itemAt(i, QFormLayout::FieldRole)->widget());
-            if (langComboWidget) {
-                const QString LANG = mSettingsHelper->
-                    getStringSetting(SettingsHelper::APP_LANGUAGE);
-                const int LANG_INDEX = ALL_LANGUAGES.indexOf(LANG);
-                langComboWidget->setCurrentIndex(LANG_INDEX);
+        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE) {
+            if (THIS_KEY == SettingsHelper::APP_LANGUAGE) {
+                QComboBox* langComboWidget = nullptr;
+                langComboWidget = qobject_cast<QComboBox*>(mFormLayout->
+                    itemAt(i, QFormLayout::FieldRole)->widget());
+                if (langComboWidget) {
+                    const QString LANG = mSettingsHelper->
+                        getStringSetting(SettingsHelper::APP_LANGUAGE);
+                    const int LANG_INDEX = ALL_LANGUAGES.indexOf(LANG);
+                    langComboWidget->setCurrentIndex(LANG_INDEX);
+                }
+                continue;
             }
-            continue;
+            if (THIS_KEY == SettingsHelper::STAR_IMAGE) {
+                QComboBox* starImageComboWidget = nullptr;
+                starImageComboWidget = qobject_cast<QComboBox*>(mFormLayout->
+                    itemAt(i, QFormLayout::FieldRole)->widget());
+                if (starImageComboWidget) {
+                    const QString STAR_IMAGE = mSettingsHelper->
+                        getStringSetting(SettingsHelper::STAR_IMAGE);
+                    const int STAR_IMAGE_INDEX = SettingsHelper::
+                        ALL_STAR_IMAGES.indexOf(STAR_IMAGE);
+                    starImageComboWidget->setCurrentIndex(STAR_IMAGE_INDEX);
+                }
+                continue;
+            }
         }
     }
 
@@ -516,20 +530,35 @@ ConfigDialog::createConfigDialog() {
         }
 
         // Get QComboBox for Language.
-        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE &&
-            THIS_KEY == SettingsHelper::APP_LANGUAGE) {
-            QComboBox* langComboWidget = new QComboBox(this);
-            langComboWidget->setItemDelegate(new ComboboxDelegate(
-                langComboWidget));
-            langComboWidget->addItems(ALL_LANGUAGES);
-            langComboWidget->setObjectName(THIS_KEY);
-            mFormLayout->addRow(I18N_DISPLAY_KEY, langComboWidget);
-            connect(langComboWidget,&QComboBox::currentIndexChanged,
-                this, [this, i] (int index) {
-                mSettingChanges[i] = true;
-                mApplyButton->setEnabled(true);
-            });
-            continue;
+        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE) {
+            if (THIS_KEY == SettingsHelper::APP_LANGUAGE) {
+                QComboBox* langComboWidget = new QComboBox(this);
+                langComboWidget->setItemDelegate(new ComboboxDelegate(
+                    langComboWidget));
+                langComboWidget->addItems(ALL_LANGUAGES);
+                langComboWidget->setObjectName(THIS_KEY);
+                mFormLayout->addRow(I18N_DISPLAY_KEY, langComboWidget);
+                connect(langComboWidget,&QComboBox::currentIndexChanged,
+                    this, [this, i] (int index) {
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
+                });
+                continue;
+            }
+            if (THIS_KEY == SettingsHelper::STAR_IMAGE) {
+                QComboBox* starImageComboWidget = new QComboBox(this);
+                starImageComboWidget->setItemDelegate(new ComboboxDelegate(
+                    starImageComboWidget));
+                starImageComboWidget->addItems(SettingsHelper::ALL_STAR_IMAGES);
+                starImageComboWidget->setObjectName(THIS_KEY);
+                mFormLayout->addRow(I18N_DISPLAY_KEY, starImageComboWidget);
+                connect(starImageComboWidget,&QComboBox::currentIndexChanged,
+                    this, [this, i] (int index) {
+                    mSettingChanges[i] = true;
+                    mApplyButton->setEnabled(true);
+                });
+                continue;
+            }
         }
     }
 }
@@ -632,35 +661,44 @@ ConfigDialog::acceptConfigDialog() {
         }
 
         // Get QComboBox for Language.
-        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE &&
-            THIS_KEY == SettingsHelper::APP_LANGUAGE) {
-            QComboBox* langComboWidget = nullptr;
-            langComboWidget = qobject_cast<QComboBox*>(mFormLayout->
-                itemAt(i, QFormLayout::FieldRole)->widget());
-            if (langComboWidget) {
-                const QString VALUE = langComboWidget->currentText();
-                mSettingsHelper->setStringSetting(THIS_KEY, VALUE);
+        if (THIS_VALUETYPE == COMBOBOX_VALUETYPE) {
+            if (THIS_KEY == SettingsHelper::APP_LANGUAGE) {
+                QComboBox* langComboWidget = nullptr;
+                langComboWidget = qobject_cast<QComboBox*>(mFormLayout->
+                    itemAt(i, QFormLayout::FieldRole)->widget());
+                if (langComboWidget) {
+                    const QString VALUE = langComboWidget->currentText();
+                    mSettingsHelper->setStringSetting(THIS_KEY, VALUE);
+                }
+                continue;
             }
-            continue;
+            if (THIS_KEY == SettingsHelper::STAR_IMAGE) {
+                QComboBox* starImageComboWidget = nullptr;
+                starImageComboWidget = qobject_cast<QComboBox*>(mFormLayout->
+                    itemAt(i, QFormLayout::FieldRole)->widget());
+                if (starImageComboWidget) {
+                    const QString VALUE = starImageComboWidget->currentText();
+                    mSettingsHelper->setStringSetting(THIS_KEY, VALUE);
+                }
+                continue;
+            }
         }
     }
 
-    // Signal X11 thread we're updated with a settings
-    // change that needs a canvas redraw. We use shorthand
-    // "Any changed setting in PROPERTIES list starting from
-    // background color forces canvas redraw".
+    // Signal X11 thread we're updated with a settings change that
+    // needs a canvas redraw. We use shorthand "Any changed setting in
+    // PROPERTIES list before LANGUAGE setting" forces canvas redraw.
     bool canvasNeedsRedraw = false;
     const int SETTINGS_SIZE = SettingsHelper::PROPERTIES.size();
     for (int index = 0; index < SETTINGS_SIZE; index++) {
         const SettingsHelper::SettingsProperty THIS_SETTING =
             SettingsHelper::PROPERTIES[index];
-        if (THIS_SETTING.name == SettingsHelper::BACKGROUND_COLOR) {
-            for (; index < SETTINGS_SIZE; index++) {
-                if (mSettingChanges[index] == true) {
-                    canvasNeedsRedraw = true;
-                    break;
-                }
-            }
+        if (THIS_SETTING.name == SettingsHelper::APP_LANGUAGE) {
+            break;
+        }
+        if (mSettingChanges[index] == true) {
+            canvasNeedsRedraw = true;
+            break;
         }
     }
     sendConfigDialogUpdatedEvent(canvasNeedsRedraw);

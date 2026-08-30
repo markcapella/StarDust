@@ -18,7 +18,7 @@ class ConfigDialog : public QDialog {
 
     public:
         static inline const int CONFIG_DIALOG_WIDTH = 575;
-        static inline const int CONFIG_DIALOG_HEIGHT = 775;
+        static inline const int CONFIG_DIALOG_HEIGHT = 835;
 
         static inline const int FORM_TOP_BOTTOM_SPACING = 15;
         static inline const int FORM_LAYOUT_ROW_SPACING = 8;
@@ -52,22 +52,6 @@ class ConfigDialog : public QDialog {
         void updateConfigDialog();
 
     private:
-        Window mWindow = None;
-
-        QFormLayout* mFormLayout = nullptr;
-        QVBoxLayout* mMainLayout = nullptr;
-
-        QDialogButtonBox* mConfigButtonBox = nullptr;
-
-        QPushButton* mAboutButton = nullptr;
-        QPushButton* mOkButton = nullptr;
-        QPushButton* mApplyButton = nullptr;
-        QPushButton* mCancelButton = nullptr;
-
-        QList<bool> mSettingChanges;
-
-        QDialog* mAboutDialog = nullptr;
-
         /**
          * Build the UI form layout.
          */
@@ -94,4 +78,21 @@ class ConfigDialog : public QDialog {
          * Show this apps "About" dialog.
          */
         void showAboutDialog();
+
+        /**
+         * Members.
+         */
+        Window mWindow = None;
+
+        QFormLayout* mFormLayout = nullptr;
+        QVBoxLayout* mMainLayout = nullptr;
+
+        QPushButton* mAboutButton = nullptr;
+        QPushButton* mOkButton = nullptr;
+        QPushButton* mApplyButton = nullptr;
+        QPushButton* mCancelButton = nullptr;
+
+        QList<bool> mSettingChanges;
+
+        QDialog* mAboutDialog = nullptr;
 };

@@ -4,9 +4,12 @@
 /**
  * Canvas is the main widget & draw.
  */
-Canvas::Canvas(const Window window, const vector<Button*>& buttons) {
+Canvas::Canvas(const Window window, const Picture picture,
+    const vector<Button*>& buttons) {
+
     mWindow = window;
     mWindowButtons = buttons;
+    mRenderPicture = picture;
 }
 
 Canvas::~Canvas() {
@@ -22,7 +25,8 @@ Canvas::initCanvas() {
 
     const int NUMBER_OF_NEW_STARS = getSaturatedStarCount();
     for (int i = 0; i < NUMBER_OF_NEW_STARS; i++) {
-        mStars.push_back(new Star(mWindow, mWindowButtons));
+        mStars.push_back(new Star(mWindow, mRenderPicture,
+            mWindowButtons));
         mStars[i]->startChangeTimers();
     }
 
@@ -40,9 +44,6 @@ Canvas::drawCanvas() {
 
     XRenderPictureAttributes polyEdgeSmooth{};
     polyEdgeSmooth.poly_edge = PolyEdgeSmooth;
-    Picture canvasPic = XRenderCreatePicture(mDisplay,
-        mWindow, XRenderFindStandardFormat(mDisplay,
-        PictStandardARGB32), CPPolyEdge, &polyEdgeSmooth);
 
     const XRenderColor BACKGROUND_COLOR = mSettingsHelper->
         getColorSetting(SettingsHelper::BACKGROUND_COLOR);
@@ -52,7 +53,7 @@ Canvas::drawCanvas() {
         BACKGROUND_COLOR.red, BACKGROUND_COLOR.green,
         BACKGROUND_COLOR.blue, BACKGROUND_OPACITY);
 
-    XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
+    XRenderFillRectangle(mDisplay, PictOpSrc, mRenderPicture,
         &BLENDED_BACKGROUND, mSettingsHelper->getCanvasXPos(),
         mSettingsHelper->getCanvasYPos(), mSettingsHelper->
         getCanvasWidth(), mSettingsHelper->getCanvasHeight());
@@ -63,7 +64,6 @@ Canvas::drawCanvas() {
         mStars[i]->draw();
     }
 
-    XRenderFreePicture(mDisplay, canvasPic);
     XFlush(mDisplay);
 }
 
@@ -75,10 +75,6 @@ Canvas::eraseCanvas() {
     XRenderPictureAttributes polyEdgeSmooth{};
     polyEdgeSmooth.poly_edge = PolyEdgeSmooth;
 
-    Picture canvasPic = XRenderCreatePicture(mDisplay,
-        mWindow, XRenderFindStandardFormat(mDisplay,
-        PictStandardARGB32), CPPolyEdge, &polyEdgeSmooth);
-
     // Erase canvas stars.
     const int NUMBER_OF_NEW_STARS = mStars.size();
     for (int i = 0; i < NUMBER_OF_NEW_STARS; i++) {
@@ -88,7 +84,7 @@ Canvas::eraseCanvas() {
     }
 
     // Erase canvas.
-    XRenderFillRectangle(mDisplay, PictOpSrc, canvasPic,
+    XRenderFillRectangle(mDisplay, PictOpSrc, mRenderPicture,
         &TRANSPARENT_RCOLOR,
         mSettingsHelper->getCanvasXPos(),
         mSettingsHelper->getCanvasYPos(),
@@ -96,7 +92,6 @@ Canvas::eraseCanvas() {
         mSettingsHelper->getCanvasHeight()
     );
 
-    XRenderFreePicture(mDisplay, canvasPic);
     XFlush(mDisplay);
 }
 
@@ -120,6 +115,32 @@ Canvas::uninitCanvas() {
     mStars.clear();
 
     mInitialized = false;
+}
+
+/**
+ * After a star erases itself, redraw all stars intersecting
+ * it to correct visual artifacts.
+ */
+void
+Canvas::redrawIntersectingStars(Star* erasingStar) {
+    lock_guard<recursive_mutex> lock(gX11Mutex);
+
+    const QRect ERASED_RECT = QRect(
+        erasingStar->getXPos(), erasingStar->getYPos(),
+        erasingStar->getSize(), erasingStar->getSize()
+    );
+
+    for (Star* star : mStars) {
+        if (star != erasingStar && star->isVisible()) {
+            const QRect STAR_RECT = QRect(
+                star->getXPos(), star->getYPos(),
+                star->getSize(), star->getSize()
+            );
+            if (STAR_RECT.intersects(ERASED_RECT)) {
+                star->draw();
+            }
+        }
+    }
 }
 
 /**

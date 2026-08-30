@@ -70,6 +70,9 @@ class Button {
         virtual void updateDialog() = 0;
 
     private:
+        /**
+         * Members.
+         */
         double mX;
         double mY;
         double mWidth;

@@ -28,11 +28,6 @@ class RecentsHelper {
         QString getAppRecentsName();
 
     private:
-        // Members.
-        QString mRecentsName = "";
-
-        struct flock mRecentsLock;
-
         /**
          * Helper to return the path of this apps lock file.
          */
@@ -85,4 +80,11 @@ class RecentsHelper {
          * Unlocks the apps lock file.
          */
         void unlockRecentsProcessInfo(const int fd);
+
+        /**
+         * Members.
+         */
+        QString mRecentsName = "";
+
+        struct flock mRecentsLock;
 };

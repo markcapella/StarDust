@@ -22,6 +22,9 @@ class ConfigButton : public Button {
         void updateDialog() override;
 
     private:
+        /**
+         * Members.
+         */
         bool mConfigShown = false;
 
         ConfigDialog* mConfigDialog = nullptr;

@@ -86,6 +86,9 @@ extern XImage* mPinOutXImage;
 extern Atom mCloseAppMessage;
 extern Atom mConfigUpdated;
 
+extern recursive_mutex gX11Mutex;
+
+
 // Pngs.
 static inline const QString PIN_IN_PNG_FILENAME = "pinIn.png";
 static inline const QString PIN_OUT_PNG_FILENAME = "pinOut.png";

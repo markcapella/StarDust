@@ -55,6 +55,8 @@ QImage mPinOutQImage{};
 Atom mCloseAppMessage{};
 Atom mConfigUpdated{};
 
+recursive_mutex gX11Mutex;
+
 
 /**
  * Main.

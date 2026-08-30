@@ -61,7 +61,7 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     mainLayout->addWidget(appAuthorLine);
     mainLayout->addSpacing(15);
 
-    // Credits line.
+    // Credits line 1.
     QLabel* iconCreditsLine = new QLabel(this);
     iconCreditsLine->setText(I18N("Icon artwork provided by") +
         " <a href=\"https://perchance.org/ai-icon-generator\"" +
@@ -78,6 +78,24 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     iconCreditsPalette.setColor(QPalette::WindowText, QColor("black"));
     iconCreditsLine->setPalette(iconCreditsPalette);
     mainLayout->addWidget(iconCreditsLine);
+
+    // Credits line 2.
+    QLabel* svgCreditsLine = new QLabel(this);
+    svgCreditsLine->setText(I18N("StarImage SVG shapes provided by") +
+        " <a href=\"https://tiny-online.tools/svg-tools/svg-star-shape-generator\">" +
+        I18N("Tiny Online Tools") + "</a>");
+    svgCreditsLine->setOpenExternalLinks(true);
+    svgCreditsLine->setTextInteractionFlags(
+        Qt::LinksAccessibleByMouse);
+    svgCreditsLine->setAlignment(Qt::AlignCenter);
+    svgCreditsLine->setWordWrap(true);
+    QFont svgCreditsFont = svgCreditsLine->font();
+    svgCreditsFont.setPointSize(FONT_BASE_SIZE);
+    svgCreditsLine->setFont(svgCreditsFont);
+    QPalette svgCreditsPalette = svgCreditsLine->palette();
+    svgCreditsPalette.setColor(QPalette::WindowText, QColor("black"));
+    svgCreditsLine->setPalette(svgCreditsPalette);
+    mainLayout->addWidget(svgCreditsLine);
 
     // Prepare warnings.
     const QString WINDOW_MANAGER_NAME =

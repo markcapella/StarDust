@@ -1,0 +1,172 @@
+#!/bin/bash
+
+# Color styling.
+getColorCode() {
+    tput "$@" 2>/dev/null || true
+}
+
+COLOR_NORMAL=$(getColorCode sgr0)
+COLOR_BLACK=$(getColorCode setaf 0)
+COLOR_RED=$(getColorCode setaf 1)
+COLOR_GREEN=$(getColorCode setaf 2)
+COLOR_YELLOW=$(getColorCode setaf 3)
+COLOR_BLUE=$(getColorCode setaf 4)
+COLOR_MAGENTA=$(getColorCode setaf 5)
+COLOR_CYAN=$(getColorCode setaf 6)
+COLOR_WHITE=$(getColorCode setaf 7)
+
+TEXT_BOLD=$(getColorCode bold)
+
+##
+# svgToStarImage
+#
+# (Requires librsvg2-bin package).
+#
+echo
+echo -e "${COLOR_GREEN}""Converting SVG to Star Images style header."\
+    "${COLOR_NORMAL}"
+echo
+
+##
+# Ensure there's an input file to use.
+#
+if [[ "$1" == "" ]]; then
+    echo
+    echo -e "${COLOR_RED}""Missing input file name.|""${COLOR_NORMAL}"
+    echo
+    echo -e "${COLOR_YELLOW}""   try: |"$0" input.svg output.h|"\
+        "${COLOR_NORMAL}"
+    echo
+    echo -e "${COLOR_GREEN}""Converting SVG to Star Images"\
+        "style header complete.""${COLOR_NORMAL}"
+    exit 1
+fi
+
+##
+# Construct file vars.
+#
+INPUT_FILE_SVG="$1"
+SHAPE_NAME=$(basename "${INPUT_FILE_SVG%.*}")
+
+TEMP_FILE_FOLDER=$(mktemp -d)
+trap 'rm -rf "$TEMP_FILE_FOLDER"' EXIT
+
+OUTPUT_FILE_H="${2:-$SHAPE_NAME.h}"
+echo -n "" > "$OUTPUT_FILE_H"
+
+##
+# Support fail-safe errors.
+#
+set -eo pipefail
+
+##
+# Define range of generate image sizes.
+#
+# Changes here need to be updated in SettingsHelper.h
+# for the MAX_STAR_SIZE SettingsProperty then rebuild.
+#
+SMALLEST_SIZE="15"
+LARGEST_SIZE="60"
+
+##
+# Create the output header.
+#
+echo >> "$OUTPUT_FILE_H"
+echo "#pragma once" >> "$OUTPUT_FILE_H"
+echo >> "$OUTPUT_FILE_H"
+echo "/*" >> "$OUTPUT_FILE_H"
+echo " * ""${SHAPE_NAME}""." >> "$OUTPUT_FILE_H"
+echo " */" >> "$OUTPUT_FILE_H"
+
+##
+# Create the "image per-size" definitions.
+#
+for ((SIZE = SMALLEST_SIZE; SIZE <= LARGEST_SIZE; SIZE++)); do
+    TEMP_FILE_FILE="$TEMP_FILE_FOLDER/star-${SIZE}.png"
+
+    rsvg-convert -w "$SIZE" -h "$SIZE" \
+        "$INPUT_FILE_SVG" -o "$TEMP_FILE_FILE"
+
+    if (( SIZE < 10 )); then
+        echo "   Generating image @ size :  ${SIZE} x  ${SIZE}."
+    else
+        echo "   Generating image @ size : ${SIZE} x ${SIZE}."
+    fi
+
+    {
+        if (( SIZE < 10 )); then
+            echo "static const unsigned char"\
+                "${SHAPE_NAME}Size0${SIZE}[] = {"
+        else
+            echo "static const unsigned char"\
+                "${SHAPE_NAME}Size${SIZE}[] = {"
+        fi
+
+        magick "$TEMP_FILE_FILE" \
+            -background black -alpha remove -alpha off \
+            -colorspace Gray -depth 8 gray:- |
+            od -An -v -tu1 |
+                tr -s ' ' '\n' |
+                    awk 'NF {
+                            values[count++] = sprintf("0x%02x", $1)
+                        }
+                        END {
+                            for (i = 0; i < count; i++) {
+                                if (i % 10 == 0)
+                                    printf "    "
+
+                                printf "%s", values[i]
+
+                                if (i == count - 1)
+                                    printf "\n"
+                                else if (i % 10 == 9)
+                                    printf ",\n"
+                                else
+                                    printf ", "
+                            }
+                        }'
+        echo "};"
+        echo
+    } >> "$OUTPUT_FILE_H"
+done
+
+##
+# Create the output header file combined image definitions array.
+#
+
+# Start the block.
+cat >> "$OUTPUT_FILE_H" << 'EOF'
+/*
+ * Combined images array.
+ */
+EOF
+
+# Once per image size.
+echo "static const StarImage ${SHAPE_NAME}Collection[] = {" >> \
+    "$OUTPUT_FILE_H"
+LINE_COUNT=0
+
+for (( SIZE = SMALLEST_SIZE; SIZE < LARGEST_SIZE; SIZE++ )); do
+    if (( SIZE < 10 )); then
+        echo "    { $SIZE, ${SHAPE_NAME}Size0${SIZE}}," >> "$OUTPUT_FILE_H"
+    else
+        echo "    {$SIZE, ${SHAPE_NAME}Size${SIZE}}," >> "$OUTPUT_FILE_H"
+    fi
+done
+
+# Close the block.
+if (( SIZE < 10 )); then
+    echo "    { $LARGEST_SIZE,  ${SHAPE_NAME}Size${LARGEST_SIZE}}" >> \
+        "$OUTPUT_FILE_H"
+else
+    echo "    {$LARGEST_SIZE, ${SHAPE_NAME}Size${LARGEST_SIZE}}" >> \
+        "$OUTPUT_FILE_H"
+fi
+echo "};" >> "$OUTPUT_FILE_H"
+
+##
+# Wrap up message.
+#
+echo
+echo -e "${COLOR_GREEN}""Converting SVG to Star Images"\
+    "style header complete.""${COLOR_NORMAL}"
