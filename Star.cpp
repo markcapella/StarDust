@@ -313,49 +313,47 @@ Star::changeColor() {
  * Set StarImage mono Picture from mono color images array.
  */
 void
-Star::setStarImageMonoPicture(const StarImage& image) {
-    XRenderPictFormat* format = XRenderFindStandardFormat(
-        mDisplay, PictStandardA8);
-
+Star::setStarImageMonoPicture(const StarImage& starImage) {
     // Create XImage of StarImage size.
-    XImage* ximage = XCreateImage(mDisplay, DefaultVisual(mDisplay,
+    XImage* starXImage = XCreateImage(mDisplay, DefaultVisual(mDisplay,
         DefaultScreen(mDisplay)), 8, ZPixmap, 0, nullptr,
-        image.size, image.size, 8, image.size);
-    if (!ximage) {
+        starImage.size, starImage.size, 8, starImage.size);
+    if (!starXImage) {
         return;
     }
 
-    // Copy StarImage into XImage.
-    ximage->data = reinterpret_cast<char*>(const_cast<unsigned char*>
-        (image.pixels));
+    // Add copy of starImage to XImage.
+    const int STAR_DATA_SIZE = starImage.size * starImage.size;
+    starXImage->data = new char[STAR_DATA_SIZE];
+    memcpy(starXImage->data, starImage.pixels, STAR_DATA_SIZE);
 
-    // Create 8-bit Pixmap of StarImage size.
-    Pixmap pixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
-        image.size, image.size, 8);
-    if (pixmap == None) {
-        ximage->data = nullptr;
-        XDestroyImage(ximage);
+    // Create Pixmap of StarImage size.
+    Pixmap starPixmap = XCreatePixmap(mDisplay, DefaultRootWindow(
+        mDisplay), starImage.size, starImage.size, 8);
+    if (!starPixmap) {
+        XDestroyImage(starXImage);
         return;
     }
 
     // Copy XImage into Pixmap.
-    GC gc = XCreateGC(mDisplay, pixmap, 0, nullptr);
-    XPutImage(mDisplay, pixmap, gc, ximage, 0, 0, 0, 0,
-        image.size, image.size);
+    GC gc = XCreateGC(mDisplay, starPixmap, 0, nullptr);
+    XPutImage(mDisplay, starPixmap, gc, starXImage, 0, 0, 0, 0,
+        starImage.size, starImage.size);
     XFreeGC(mDisplay, gc);
-    ximage->data = nullptr;
-    XDestroyImage(ximage);
+    XDestroyImage(starXImage);
 
-    // Create Picture from Pixmap.
-    Picture picture = XRenderCreatePicture(mDisplay, pixmap, format,
-        0, nullptr);
-    XFreePixmap(mDisplay, pixmap);
+    // Create mono picture from Pixmap.
+    const XRenderPictFormat* FORMAT = XRenderFindStandardFormat(
+        mDisplay, PictStandardA8);
+    const Picture STAR_MONO_PICTURE = XRenderCreatePicture(mDisplay,
+        starPixmap, FORMAT, 0, nullptr);
+    XFreePixmap(mDisplay, starPixmap);
 
-    // Destroy any previous mono Picture, assign new.
+    // Set result.
     if (mStarImageMonoPicture) {
         XRenderFreePicture(mDisplay, mStarImageMonoPicture);
     }
-    mStarImageMonoPicture = picture;
+    mStarImageMonoPicture = STAR_MONO_PICTURE;
 }
 
 /**
@@ -364,44 +362,42 @@ Star::setStarImageMonoPicture(const StarImage& image) {
  */
 void
 Star::setStarImageColorPicture() {
-    // Destroy any prev color picture.
+    // Create this color picture.
+    Pixmap starPixmap = XCreatePixmap(mDisplay, DefaultRootWindow(
+        mDisplay), Star::mSize, Star::mSize, 32);
+    const XRenderPictFormat* FORMAT = XRenderFindStandardFormat(
+        mDisplay, PictStandardARGB32);
+    const Picture STAR_COLOR_PICTURE = XRenderCreatePicture(
+        mDisplay, starPixmap, FORMAT, 0, nullptr);
+    XRenderFillRectangle(mDisplay, PictOpSrc, STAR_COLOR_PICTURE,
+        &mColor, 0, 0, Star::mSize, Star::mSize);
+    XFreePixmap(mDisplay, starPixmap);
+
+    // Set result.
     if (mStarImageColorPicture) {
         XRenderFreePicture(mDisplay, mStarImageColorPicture);
     }
-
-    // Create this color picture.
-    Pixmap pixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
-        Star::mSize, Star::mSize, 32);
-
-    XRenderPictFormat* format = XRenderFindStandardFormat(mDisplay,
-        PictStandardARGB32);
-
-    Picture picture = XRenderCreatePicture(mDisplay, pixmap, format,
-        0, nullptr);
-
-    XRenderFillRectangle(mDisplay, PictOpSrc, picture, &mColor,
-        0, 0, Star::mSize, Star::mSize);
-
-    XFreePixmap(mDisplay, pixmap);
-
-    // Assign new.
-    mStarImageColorPicture = picture;
+    mStarImageColorPicture = STAR_COLOR_PICTURE;
 }
 
 /**
  * Debug a StarImage's pixel data.
  */
 void
-Star::debugStarImage(const StarImage& image) {
+Star::debugStarImage(const StarImage& starImage) {
+    // Start a long output message string.
+    QString outputMessage = QString("StarImage %1x%1:\n").
+        arg(starImage.size);
 
-    QString outputMessage = QString("StarImage %1x%1:\n").arg(image.size);
-    for (int y = 0; y < image.size; y++) {
-        for (int x = 0; x < image.size; x++) {
-            const unsigned VALUE = image.pixels[y * image.size + x];
-            outputMessage += QString("%1 ").arg(VALUE, 2, 16, QChar('0'));
+    // Add all debug info to output message string.
+    for (int y = 0; y < starImage.size; y++) {
+        for (int x = 0; x < starImage.size; x++) {
+            const unsigned V = starImage.pixels[y * starImage.size + x];
+            outputMessage += QString("%1 ").arg(V, 2, 16, QChar('0'));
         }
         outputMessage += '\n';
     }
 
+    // Log output message.
     cout << outputMessage.toStdString();
 }

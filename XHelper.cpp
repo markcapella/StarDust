@@ -1356,8 +1356,8 @@ XHelper::doesWindowReceiveClickInControlButton(const Window window,
     const Window SHAPE_RECT_WINDOW = (SHAPE_RESULT.shapeInputSet &&
         receivingWindow != window) ? receivingWindow : window;
 
-    XRectangle* rects = XShapeGetRectangles(mDisplay,
-        SHAPE_RECT_WINDOW, ShapeInput, &count, &ordering);
+    XRectangle* rects = XShapeGetRectangles(mDisplay, SHAPE_RECT_WINDOW,
+        ShapeInput, &count, &ordering);
     if (!rects) {
         if (window != targetStickyWindow) {
             return false;
