@@ -84,6 +84,13 @@ class Star : public QObject {
         void createAndStartChangeTimers();
 
         /**
+         * Set this stars "rotation". Rotation is just a combination
+         * of 90 degree rotates, combined with possible mirroring
+         * up / down or left / right.
+         */
+        void randomizeRotation();
+
+        /**
          * Set this star @ a random screen size.
          */
         void randomizeSize();
@@ -122,6 +129,26 @@ class Star : public QObject {
         void setStarImageMonoPicture(const StarImage& image);
 
         /**
+         * Apply rotation attributes to a mono color XImage.
+         */
+        void applyStarRotationToMonoXImage(XImage* starXImage);
+
+        /**
+         * Rotate a mono color XImage 90 degrees right.
+         */
+        void rotateMonoXImage90(XImage* starXImage);
+
+        /**
+         * Flip a mono color XImage Horizontally.
+         */
+        void flipMonoXImageHorizontal(XImage* starXImage);
+
+        /**
+         * Flip a mono color XImage Vertically.
+         */
+        void flipMonoXImageVertical(XImage* starXImage);
+
+        /**
          * Set StarImage color Picture, by applying it's color
          * to its mono Picture.
          */
@@ -149,6 +176,10 @@ class Star : public QObject {
         XRenderColor mColor{};
         int mSize = -1;
         QPoint mPosition{ -1, -1 };
+
+        int mRotation = 0;
+        bool mIsFlippedHorizontal = false;
+        bool mIsFlippedVertical = false;
 
         // Attribute change timers.
         QTimer* mSizeChangeTimer = nullptr;

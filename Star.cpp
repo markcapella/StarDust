@@ -12,6 +12,7 @@ Star::Star(const Window window,  const Picture picture,
     mRenderPicture = picture;
     mWindowButtons = buttons;
 
+    randomizeRotation();
     randomizeSize();
     randomizePosition();
     randomizeColor();
@@ -128,7 +129,7 @@ void
 Star::createAndStartChangeTimers() {
     // Create & start Size Change timer.
     mSizeChangeTimer = new QTimer(this);
-    mSizeChangeTimer->setInterval(1);
+    mSizeChangeTimer->setInterval(10);
     connect(mSizeChangeTimer, &QTimer::timeout, this, [this]() {
         changeSize();
     });
@@ -152,6 +153,18 @@ Star::createAndStartChangeTimers() {
     });
     QTimer::singleShot(randomIntegerUpTo(500), this, [this]() {
         mColorChangeTimer->start(); });
+}
+
+/**
+ * Set this stars "rotation". Rotation is just a combination
+ * of 90 degree rotates, combined with possible mirroring
+ * up / down or left / right.
+ */
+void
+Star::randomizeRotation() {
+    mRotation = randomIntegerUpTo(4);
+    mIsFlippedHorizontal = randomIntegerUpTo(2) == 0;
+    mIsFlippedVertical = randomIntegerUpTo(2) == 0;
 }
 
 /**
@@ -315,8 +328,8 @@ Star::changeColor() {
 void
 Star::setStarImageMonoPicture(const StarImage& starImage) {
     // Create XImage of StarImage size.
-    XImage* starXImage = XCreateImage(mDisplay, DefaultVisual(mDisplay,
-        DefaultScreen(mDisplay)), 8, ZPixmap, 0, nullptr,
+    XImage* starXImage = XCreateImage(mDisplay, DefaultVisual(
+        mDisplay, DefaultScreen(mDisplay)), 8, ZPixmap, 0, nullptr,
         starImage.size, starImage.size, 8, starImage.size);
     if (!starXImage) {
         return;
@@ -326,6 +339,9 @@ Star::setStarImageMonoPicture(const StarImage& starImage) {
     const int STAR_DATA_SIZE = starImage.size * starImage.size;
     starXImage->data = new char[STAR_DATA_SIZE];
     memcpy(starXImage->data, starImage.pixels, STAR_DATA_SIZE);
+
+    // Apply random image transform for variety.
+    applyStarRotationToMonoXImage(starXImage);
 
     // Create Pixmap of StarImage size.
     Pixmap starPixmap = XCreatePixmap(mDisplay, DefaultRootWindow(
@@ -354,6 +370,91 @@ Star::setStarImageMonoPicture(const StarImage& starImage) {
         XRenderFreePicture(mDisplay, mStarImageMonoPicture);
     }
     mStarImageMonoPicture = STAR_MONO_PICTURE;
+}
+
+/**
+ * Apply rotation attributes to a mono color XImage.
+ */
+void
+Star::applyStarRotationToMonoXImage(XImage* starXImage) {
+    switch (mRotation) {
+        case 3: rotateMonoXImage90(starXImage); // 90 or -270.
+        case 2: rotateMonoXImage90(starXImage); // 180.
+        case 1: rotateMonoXImage90(starXImage); // 270 or -90.
+        default: break; // None, or 0.
+    }
+    if (mIsFlippedHorizontal) {
+        flipMonoXImageHorizontal(starXImage);
+    }
+    if (mIsFlippedVertical) {
+        flipMonoXImageVertical(starXImage);
+    }
+}
+
+/**
+ * Rotate a mono color XImage 90 degrees right.
+ */
+void
+Star::rotateMonoXImage90(XImage* starXImage) {
+    // I let ChatGPT do this.
+    const int W = starXImage->width;
+
+    for (int h = 0; h < W / 2; h++) {
+        for (int w = h; w < W - h - 1; w++) {
+            const int IN_OUT = starXImage->data[h * W + w];
+
+            starXImage->data[h * W + w] = starXImage->
+                data[(W - 1 - w) * W + h];
+
+            starXImage->data[(W - 1 - w) * W + h] = starXImage->
+                data[(W - 1 - h) * W + (W - 1 - w)];
+
+            starXImage->data[(W - 1 - h) * W + (W - 1 - w)] =
+                starXImage->data[w * W + (W - 1 - h)];
+
+            starXImage->data[w * W + (W - 1 - h)] = IN_OUT;
+        }
+    }
+}
+
+/**
+ * Flip a mono color XImage Horizontally.
+ */
+void
+Star::flipMonoXImageHorizontal(XImage* starXImage) {
+    // I let ChatGPT do this.
+    const int W = starXImage->width;
+
+    for (int y = 0; y < W; y++) {
+        for (int x = 0; x < W / 2; x++) {
+            const int IN_OUT = starXImage->data[y * W + x];
+
+            starXImage->data[y * W + x] =
+                starXImage->data[y * W + (W - 1 - x)];
+
+            starXImage->data[y * W + (W - 1 - x)] = IN_OUT;
+        }
+    }
+}
+
+/**
+ * Flip a mono color XImage Vertically.
+ */
+void
+Star::flipMonoXImageVertical(XImage* starXImage) {
+    // I let ChatGPT do this.
+    const int W = starXImage->width;
+
+    for (int y = 0; y < W / 2; y++) {
+        for (int x = 0; x < W; x++) {
+            const int IN_OUT = starXImage->data[y * W + x];
+
+            starXImage->data[y * W + x] =
+                starXImage->data[(W - 1 - y) * W + x];
+
+            starXImage->data[(W - 1 - y) * W + x] = IN_OUT;
+        }
+    }
 }
 
 /**

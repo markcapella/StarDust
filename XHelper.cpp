@@ -889,59 +889,28 @@ XHelper::isWindowHoveredAtPos(const Window stickyWindow,
         }
 
         // Find toplevel OF EACH.
-        const Window EACH_TOP_WINDOW = getToplevelOfWindow(EACH->window);
+        const Window EACH_TOP_WINDOW = getToplevelOfWindow(
+            EACH->window);
         const QRect EFFECTIVE_RECT = getEffectiveRect(
             EACH_TOP_WINDOW, EACH->windowRect);
         if (!EFFECTIVE_RECT.contains(pos)) {
             continue;
         }
 
-        // Check if EACH candidate is OUR stickyWindow, or its toplevel.
-        const bool IS_OUR_WINDOW = (EACH->window == stickyWindow ||
-            EACH_TOP_WINDOW == stickyWindow);
-        if (!IS_OUR_WINDOW) {
-            if (doesWindowReceiveHoverAtPos(EACH_TOP_WINDOW,
-                pos.x(), pos.y())) {
-                return false;
-            }
-            continue;
+        // If it's our target sticky window, return result.
+        const bool IS_OUR_WINDOW = (EACH->window == stickyWindow) ||
+            (EACH_TOP_WINDOW == stickyWindow);
+        if (IS_OUR_WINDOW) {
+            return EACH->windowRect.contains(pos);
         }
 
-        // If we are inside our own client area, check if anything
-        // *above* us in the window stack is blocking us.
-        if (EACH->windowRect.contains(pos)) {
-            bool blockedByIntervening = false;
-            for (int j = WININFO_SIZE - 1; j > i; j--) {
-                const WinInfo* UPPER = winInfos[j];
-                if (VISIBLE_WS != -1 && UPPER->onWorkspace != -1 &&
-                    VISIBLE_WS != UPPER->onWorkspace) {
-                    continue;
-                }
-                if (UPPER->isHidden) {
-                    continue;
-                }
-
-                // Find toplevel window for the upper candidate.
-                const Window UPPER_TOP = getToplevelOfWindow(
-                    UPPER->window);
-                const QRect UPPER_EFFECTIVE_RECT = getEffectiveRect(
-                    UPPER_TOP, UPPER->windowRect);
-                if (UPPER_EFFECTIVE_RECT.contains(pos)) {
-                    if (doesWindowReceiveHoverAtPos(UPPER_TOP,
-                            pos.x(), pos.y())) {
-                        blockedByIntervening = true;
-                        break;
-                    }
-                }
-            }
-            return !blockedByIntervening;
+        // If window other than stickyWindow recieves 
+        if (doesWindowReceiveClickAtPosition(EACH_TOP_WINDOW,
+            pos.x(), pos.y())) {
+            return false;
         }
-
-        // We are inside our own frame/titlebar area.
-        return false;
     }
 
-    // Default sanity.
     return false;
 }
 
@@ -951,7 +920,7 @@ XHelper::isWindowHoveredAtPos(const Window stickyWindow,
  * for client boundaries, input shape extensions, and visibility.
  */
 bool
-XHelper::doesWindowReceiveHoverAtPos(const Window targetWindow,
+XHelper::doesWindowReceiveClickAtPosition(const Window targetWindow,
     const int rootPosX, const int rootPosY) {
 
     // Get geometry and attributes of the target window. Translate
@@ -1014,200 +983,14 @@ XHelper::doesWindowReceiveHoverAtPos(const Window targetWindow,
                     break;
                 }
             }
-
             XFree(rects);
         }
-
         if (!insideShape) {
             return false;
         }
     }
 
     return true;
-}
-
-/**
- * This method determines if the mouse is hovered above window
- * and capable of clicking it in PinButton rect @ point.
- */
-bool
-XHelper::isWindowClickableInPinButton(const Window stickyWindow,
-    const QRect rect, const QPoint pos) {
-
-    // Sanity check: if outside our stickyWindow's
-    // local rect, it can't be hovered.
-    if (!rect.contains(pos)) {
-        return false;
-    }
-
-    // Init.
-    vector<WinInfo*> winInfos = getWinInfoList();
-    const long VISIBLE_WS = getVisibleDesktop();
-
-    // Clear stacked winInfos on exit.
-    struct ScopeGuard {
-        vector<WinInfo*>& vectorRef;
-        ~ScopeGuard() {
-            for (vector<WinInfo*>::iterator it = vectorRef.begin();
-                it != vectorRef.end(); ++it) {
-                delete *it;
-            }
-            vectorRef.clear();
-        }
-    } guard{winInfos};
-
-    // Search candidate winInfos down from the top
-    // (ray cast of the cursor).
-    const int WININFO_SIZE = winInfos.size();
-    for (int i = WININFO_SIZE - 1; i >= 0; i--) {
-        const WinInfo* EACH = winInfos[i];
-        if (VISIBLE_WS != -1 && EACH->onWorkspace != -1 &&
-            VISIBLE_WS != EACH->onWorkspace) {
-            continue;
-        }
-        if (EACH->isHidden) {
-            continue;
-        }
-        if (!EACH->windowRect.contains(pos)) {
-            continue;
-        }
-
-        // Success.
-        if (EACH->window == stickyWindow) {
-            return true;
-        }
-
-        // Check if an upper window actually intercepts
-        // input at this position.
-        if (doesWindowReceiveClickInPinButton(EACH->window,
-            pos.x(), pos.y())) {
-            return false;
-        }
-    }
-
-    return false;
-}
-
-/**
- * Checks if a specific point in global screen coordinates will
- * land on an active hit-test area of a given window.
- */
-bool
-XHelper::doesWindowReceiveClickInPinButton(const Window window,
-    const int rootPosX, const int rootPosY) {
-
-    // Sanity check.
-    if (window == None) {
-        return false;
-    }
-
-    // If unknown or hidden, windows can't receive clicks.
-    XWindowAttributes windowAttributes;
-    if (!XGetWindowAttributes(mDisplay, window, &windowAttributes) ||
-        windowAttributes.map_state != IsViewable) {
-        return false;
-    }
-
-    // InputOnly windows cannot receive mouse clicks or input events.
-    if (windowAttributes.c_class == InputOnly) {
-        return false;
-    }
-
-    // Check WM_HINTS (Client accepts input flag) for input allowed.
-    XWMHints* wmHints = XGetWMHints(mDisplay, window);
-    if (wmHints) {
-        if ((wmHints->flags & InputHint) && !wmHints->input) {
-            XFree(wmHints);
-            return false;
-        }
-        XFree(wmHints);
-    }
-
-    // Find toplevel for reparented decorations.
-    const Window EACH_TOP_WINDOW = getToplevelOfWindow(window);
-
-    // Convert root cursor coords to toplevel.
-    int topWindowX, topWindowY; Window topWindowsChild;
-    if (!XTranslateCoordinates(mDisplay, windowAttributes.root,
-        EACH_TOP_WINDOW, rootPosX, rootPosY, &topWindowX, &topWindowY,
-        &topWindowsChild)) {
-        return false;
-    }
-
-    // Positions outside the toplevel fail.
-    XWindowAttributes topAttributes;
-    if (!XGetWindowAttributes(mDisplay, EACH_TOP_WINDOW,
-        &topAttributes)) {
-        return false;
-    }
-    if (topWindowX < 0 || topWindowY < 0 ||
-        topWindowX >= topAttributes.width ||
-        topWindowY >= topAttributes.height) {
-        return false;
-    }
-
-    // Resolve click-receiving toplevel.
-    int receiveX = topWindowX; int receiveY = topWindowY;
-    Window receivingWindow = EACH_TOP_WINDOW;
-    if (topWindowsChild != None) {
-        receivingWindow = topWindowsChild;
-        Window unusedChild;
-        if (!XTranslateCoordinates(mDisplay, EACH_TOP_WINDOW,
-            receivingWindow, topWindowX, topWindowY,
-            &receiveX, &receiveY, &unusedChild)) {
-            return false;
-        }
-    }
-
-    // Query XShape extents.
-    const WindowShapeResult SHAPE_RESULT =
-        getWindowShapeExtents(window, receivingWindow);
-    if (SHAPE_RESULT.shapeInputSet &&
-        (SHAPE_RESULT.width == 0 || SHAPE_RESULT.height == 0)) {
-        return false;
-    }
-
-    int count = 0, ordering = 0;
-    const Window SHAPE_RECT_WINDOW = (SHAPE_RESULT.shapeInputSet &&
-        receivingWindow != window) ? receivingWindow : window;
-
-    XRectangle* rects = XShapeGetRectangles(mDisplay, SHAPE_RECT_WINDOW,
-        ShapeInput, &count, &ordering);
-    if (!rects) {
-        if (SHAPE_RESULT.success && !SHAPE_RESULT.shapeInputSet) {
-            return false;
-        }
-        return true;
-    }
-    if (count == 0) {
-        XFree(rects);
-        return false;
-    }
-
-    // Check all Inputshape rects for clickability.
-    bool foundReceiver = false;
-
-    int checkX = receiveX;
-    int checkY = receiveY;
-    if (SHAPE_RECT_WINDOW != receivingWindow) {
-        Window unusedChild;
-        XTranslateCoordinates(mDisplay, receivingWindow,
-            SHAPE_RECT_WINDOW, receiveX, receiveY,
-                &checkX, &checkY, &unusedChild);
-    }
-
-    for (int i = 0; i < count; ++i) {
-        if (checkX >= rects[i].x &&
-            checkX < rects[i].x + rects[i].width &&
-            checkY >= rects[i].y &&
-            checkY < rects[i].y + rects[i].height) {
-            foundReceiver = true;
-            break;
-        }
-    }
-
-    XFree(rects);
-    return foundReceiver;
 }
 
 /**
@@ -1263,8 +1046,8 @@ XHelper::isWindowClickableInControlButton(const Window stickyWindow,
 
         // Check if an upper window actually intercepts
         // input at this position.
-        if (doesWindowReceiveClickInControlButton(EACH->window,
-            pos.x(), pos.y(), stickyWindow)) {
+        if (doesWindowReceiveClickAtPosition(EACH->window,
+            pos.x(), pos.y())) {
             return false;
         }
     }
@@ -1278,8 +1061,7 @@ XHelper::isWindowClickableInControlButton(const Window stickyWindow,
  */
 bool
 XHelper::doesWindowReceiveClickInControlButton(const Window window,
-    const int rootPosX, const int rootPosY,
-    const Window targetStickyWindow) {
+    const int rootPosX, const int rootPosY) {
 
     // Sanity check.
     if (window == None) {
@@ -1359,9 +1141,6 @@ XHelper::doesWindowReceiveClickInControlButton(const Window window,
     XRectangle* rects = XShapeGetRectangles(mDisplay, SHAPE_RECT_WINDOW,
         ShapeInput, &count, &ordering);
     if (!rects) {
-        if (window != targetStickyWindow) {
-            return false;
-        }
         return true;
     }
     if (count == 0) {

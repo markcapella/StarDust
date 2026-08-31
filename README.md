@@ -1,3 +1,4 @@
+
 # StarDust
     
 !['StarDustIcon'](https://github.com/markcapella/StarDust/blob/main/StarDust.png)
@@ -96,10 +97,6 @@ For Fedora systems:
 ### Command Line.
 
     StarDust
-
-## Translations are hard, but doable in this model.
-
-[The README](/translations/TRANSLATION_README.md)
     
 ## markjamescapella@proton.me Rocks !
 

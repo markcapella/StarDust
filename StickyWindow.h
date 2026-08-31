@@ -127,23 +127,18 @@ class StickyWindow {
          * Cursor watcher makes visible any Pin button or corner
          * Control button visible the mouse is hovering.
          */
-        void setAllControlsVisibility(const bool optimize);
-
-        /**
-         * Set visibility state of the four corner control buttons on
-         * or off based on ConfigMode and update auto hide timer.
-         */
-        void setControlButtonsVisibility();
-
-        /**
-         * Setter for Hovered PinButton visibility state.
-         */
-        void setHoveredPinButtonVisibility(const bool visibility);
+        void makeAnyHoveredControlButtonVisible(const bool optimize);
 
         /**
          * Setter for all other Hovered ControlButton visibility state.
          */
         void setHoveredControlButtonVisibility(const QPoint position);
+
+        /**
+         * Set visibility state of the four corner control buttons on
+         * or off based on ConfigMode and update auto hide timer.
+         */
+        void updateAutoHideControlsTimer();
 
         /**
          * Press hovered button, & return it's position.

@@ -22,8 +22,9 @@ StickyWindow::StickyWindow() {
     createAllWindowButtons();
 
     // Instantiate widget canvas.
-    mCanvas = new Canvas(getX11Window(), mRenderPicture, mButtons);
-    setControlButtonsVisibility();
+    mCanvas = new Canvas(getX11Window(),
+        mRenderPicture, mButtons);
+    updateAutoHideControlsTimer();
 
     // Create autohide timer for control buttons,
     // then set control buttons visibility.
@@ -187,7 +188,7 @@ StickyWindow::run() {
         }
 
         // Custom hover logic for controls.
-        setAllControlsVisibility(true);
+        makeAnyHoveredControlButtonVisible(true);
 
         // Support ConfigDialog loop.
         QCoreApplication::processEvents();
@@ -403,7 +404,7 @@ StickyWindow::setConfigModeOff() {
 
     // Set visibility off, & done.
     mSettingsHelper->setConfigMode(false);
-    setControlButtonsVisibility();
+    updateAutoHideControlsTimer();
 }
 
 /**
@@ -503,21 +504,16 @@ StickyWindow::drawAllWindowButtons() {
  * Control button visible the mouse is hovering.
  */
 void
-StickyWindow::setAllControlsVisibility(const bool optimize) {
+StickyWindow::makeAnyHoveredControlButtonVisible(const bool optimize) {
     // Find the cursor location relative to the root window.
-    Window rootWindow = None;
-    int rootX = -1;
-    int rootY = -1;
-    Window window = None;
-    int winX = -1;
-    int winY = -1;
+    Window rootWindow = None; int rootX = -1; int rootY = -1;
+    Window window = None; int winX = -1; int winY = -1;
     unsigned int clickStatus = 0;
-
     if (!XQueryPointer(mDisplay, DefaultRootWindow(mDisplay),
         &rootWindow, &window, &rootX, &rootY, &winX, &winY,
         &clickStatus)) {
-        cout << XCOLOR_YELLOW << "Failed to query Cursor location." <<
-            XCOLOR_NORMAL << endl;
+        cout << XCOLOR_YELLOW << "Failed to query "
+            "Cursor location." << XCOLOR_NORMAL << endl;
         return;
     }
 
@@ -531,78 +527,36 @@ StickyWindow::setAllControlsVisibility(const bool optimize) {
 
     // Early out if not hovered anywhere.
     const QRect WINDOW_RECT = QRect(mSettingsHelper->getWindowXPos(),
-        mSettingsHelper->getWindowYPos(), mSettingsHelper->getWindowWidth(),
-        mSettingsHelper->getWindowHeight());
+        mSettingsHelper->getWindowYPos(), mSettingsHelper->
+        getWindowWidth(), mSettingsHelper->getWindowHeight());
+
     const bool IS_WINDOW_HOVERED = mXHelper->isWindowHoveredAtPos(
         getX11Window(), WINDOW_RECT, mCursorHoverPosition);
-    if (!IS_WINDOW_HOVERED) {
-        setHoveredPinButtonVisibility(false);
-        setHoveredControlButtonVisibility(QPoint(-1, -1));
-        return;
-    }
+
+    const bool ENABLE_PIN_ON_WINDOW_HOVER = mSettingsHelper->
+        getBoolSetting(SettingsHelper::SHOW_PIN_ON_WINDOW_HOVER);
 
     // Set visibility for Pin Button control. It's visible on
     // window hovered and pinButtonEnabled or pinButton hovered.
     const QRect PIN_BUTTON_RECT = QRect(
         mSettingsHelper->getWindowXPos() + mButtons[0]->getX(),
         mSettingsHelper->getWindowYPos() + mButtons[0]->getY(),
-        mButtons[0]->getWidth(),
-        mButtons[0]->getHeight());
-    const bool IS_PIN_BOTTON_CLICKABLE =
-        mXHelper->isWindowClickableInPinButton(getX11Window(),
+        mButtons[0]->getWidth(), mButtons[0]->getHeight());
+
+    const bool IS_PIN_BOTTON_CLICKABLE = mXHelper->
+        isWindowClickableInControlButton(getX11Window(),
         PIN_BUTTON_RECT, mCursorHoverPosition);
-    const bool PIN_VISIBILITY = mSettingsHelper->getBoolSetting(
-        SettingsHelper::ENABLE_PIN_CONTROL) ||
-        IS_PIN_BOTTON_CLICKABLE;
-    setHoveredPinButtonVisibility(PIN_VISIBILITY);
+
+    const bool PIN_VISIBILITY = IS_PIN_BOTTON_CLICKABLE ||
+        (IS_WINDOW_HOVERED && ENABLE_PIN_ON_WINDOW_HOVER);
+
+    if (mPinButton->isVisible() != PIN_VISIBILITY) {
+        mPinButton->setVisible(PIN_VISIBILITY);
+        draw();
+    }
 
     // Set visibility for all other controls.
     setHoveredControlButtonVisibility(mCursorHoverPosition);
-}
-
-/**
- * Set visibility state of the four corner control buttons on
- * or off based on ConfigMode and update auto hide timer.
- */
-void
-StickyWindow::setControlButtonsVisibility() {
-    lock_guard<recursive_mutex> lock(mButtonsMutLock);
-    const bool CONFIG_MODE = mSettingsHelper->getConfigMode();
-
-    // Pin button = 0, controls start @ 1;
-    const int BUTTONS_COUNT = mButtons.size();
-    for (int i = 1; i < BUTTONS_COUNT; i++) {
-        mButtons[i]->setVisible(CONFIG_MODE);
-    }
-    draw();
-
-    // If not Config mode, stop autohide timer & done.
-    if (!CONFIG_MODE) {
-        if (mAutoHideControlsTimer) {
-            mAutoHideControlsTimer->stop();
-        }
-        return;
-    }
-
-    // If using autohide Config buttons, start timer.
-    if (mSettingsHelper->getBoolSetting(SettingsHelper::
-        AUTOHIDE_CONTROLS)) {
-        mAutoHideControlsTimer->start(mSettingsHelper->getIntSetting(
-            SettingsHelper::AUTOHIDE_DELAY) * 1000);
-    }
-}
-
-/**
- * Setter for Hovered PinButton visibility state.
- */
-void
-StickyWindow::setHoveredPinButtonVisibility(
-    const bool visibility) {
-
-    if (mPinButton->isVisible() != visibility) {
-        mPinButton->setVisible(visibility);
-        draw();
-    }
 }
 
 /**
@@ -646,6 +600,38 @@ StickyWindow::setHoveredControlButtonVisibility(
     // One final draw for any affected.
     if (redrawRequired) {
         draw();
+    }
+}
+
+/**
+ * Set visibility state of the four corner control buttons on
+ * or off based on ConfigMode and update auto hide timer.
+ */
+void
+StickyWindow::updateAutoHideControlsTimer() {
+    lock_guard<recursive_mutex> lock(mButtonsMutLock);
+    const bool CONFIG_MODE = mSettingsHelper->getConfigMode();
+
+    // Pin button = 0, controls start @ 1;
+    const int BUTTONS_COUNT = mButtons.size();
+    for (int i = 1; i < BUTTONS_COUNT; i++) {
+        mButtons[i]->setVisible(CONFIG_MODE);
+    }
+    draw();
+
+    // If not Config mode, stop autohide timer & done.
+    if (!CONFIG_MODE) {
+        if (mAutoHideControlsTimer) {
+            mAutoHideControlsTimer->stop();
+        }
+        return;
+    }
+
+    // If using autohide Config buttons, start timer.
+    if (mSettingsHelper->getBoolSetting(SettingsHelper::
+        AUTOHIDE_CONTROLS)) {
+        mAutoHideControlsTimer->start(mSettingsHelper->getIntSetting(
+            SettingsHelper::AUTOHIDE_DELAY) * 1000);
     }
 }
 
@@ -733,7 +719,7 @@ StickyWindow::clickPressedPinButton() {
     const bool NEW_CONFIG_MODE = !CONFIG_MODE;
     mSettingsHelper->setConfigMode(NEW_CONFIG_MODE);
 
-    setControlButtonsVisibility();
+    updateAutoHideControlsTimer();
 }
 
 /**
@@ -778,7 +764,7 @@ StickyWindow::handleX11EventQueue() {
         XNextEvent(mDisplay, &event);
 
         // Reset control buttons hover visibility.
-        setAllControlsVisibility(false);
+        makeAnyHoveredControlButtonVisible(false);
 
         switch (event.type) {
 
@@ -983,7 +969,7 @@ StickyWindow::receiveConfigDialogUpdatedEvent(
     const bool canvasNeedsRedraw) {
 
     maybeAdjustWindowOverhang();
-    setControlButtonsVisibility();
+    updateAutoHideControlsTimer();
     setWindowStickPosition();
     rangeCheckPreferredDesktopSetting();
 

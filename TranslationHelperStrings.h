@@ -630,11 +630,16 @@ const QStringList TRANSLATION_SET_57 = { "Apply",
     "適用する", "Toepassen", "Aplicar", "Применять"
 };
 
-const QStringList TRANSLATION_SET_58 = { "Enable Pin Control",
-    "Aktivieren Sie die Pin-Steuerung", "Habilitar control de PIN",
-    "Activer le contrôle des broches", "Abilita controllo pin",
-    "ピン制御を有効にする", "Schakel pincontrole in",
-    "Ativar controle de pinos", "Включить управление контактами"
+const QStringList DISPLAY_PIN_ON_HOVER_SET = {
+    "Show Pin on Window Hover",
+    "Pin beim Überfahren des Fensters anzeigen",
+    "Mostrar Pin al pasar el cursor sobre la ventana",
+    "Afficher l'épingle au survol de la fenêtre",
+    "Mostra il PIN al passaggio del mouse sulla finestra",
+    "ウィンドウにホバーしたときにピンを表示",
+    "Pin weergeven bij muisaanwijzer over venster",
+    "Mostrar Pino ao Passar o Mouse sobre a Janela",
+    "Показать PIN при наведении на окно"
 };
 
 const QStringList TRANSLATION_SET_59 = { "Allow Desktop Overhang",
@@ -742,7 +747,7 @@ const vector<QStringList> ALL_TRANSLATIONS = {
     TRANSLATION_SET_55,
     TRANSLATION_SET_56,
     TRANSLATION_SET_57,
-    TRANSLATION_SET_58,
+    DISPLAY_PIN_ON_HOVER_SET,
     TRANSLATION_SET_59,
     SVG_CREDITS_LINE_SET,
     SVG_CREDITS_NAME_LINE_SET,

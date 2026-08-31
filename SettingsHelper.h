@@ -57,7 +57,7 @@ class SettingsHelper {
         IC_QString DESKTOP_OVERHANG = "Allow Desktop Overhang";
         IC_QString DIVIDER_6 = "divider06";
 
-        IC_QString ENABLE_PIN_CONTROL = "Enable Pin Control";
+        IC_QString SHOW_PIN_ON_WINDOW_HOVER = "Show Pin on Window Hover";
         IC_QString AUTOHIDE_CONTROLS = "Auto hide Controls";
         IC_QString AUTOHIDE_DELAY = "Auto hide Delay";
 
@@ -135,15 +135,15 @@ class SettingsHelper {
 
             { .name = COLOR_CHANGE_DELAY,
               .valueType = SLIDER_VALUETYPE, .initialValue = "500",
-              .rangeMinimum = 1, .rangeMaximum = 2000
+              .rangeMinimum = 1, .rangeMaximum = 3000
             },
             { .name = SIZE_CHANGE_DELAY,
-              .valueType = SLIDER_VALUETYPE, .initialValue = "300",
-              .rangeMinimum = 1, .rangeMaximum = 2000
+              .valueType = SLIDER_VALUETYPE, .initialValue = "500",
+              .rangeMinimum = 1, .rangeMaximum = 1000
             },
             { .name = POSITION_CHANGE_DELAY,
               .valueType = SLIDER_VALUETYPE, .initialValue = "500",
-              .rangeMinimum = 1, .rangeMaximum = 2000
+              .rangeMinimum = 1, .rangeMaximum = 3000
             },
             { .name = DIVIDER_3,
               .valueType = DIVIDER_VALUETYPE, .initialValue = "5",
@@ -203,7 +203,7 @@ class SettingsHelper {
               .rangeMaximum = numeric_limits<int>::max()
             },
 
-            { .name = ENABLE_PIN_CONTROL,
+            { .name = SHOW_PIN_ON_WINDOW_HOVER,
               .valueType = BOOL_VALUETYPE, .initialValue = "true",
               .rangeMinimum = numeric_limits<int>::min(),
               .rangeMaximum = numeric_limits<int>::max()

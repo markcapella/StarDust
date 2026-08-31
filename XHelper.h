@@ -232,21 +232,7 @@ class XHelper {
          * That means accept input at the given coordinates, accounting
          * for client boundaries, input shape extensions, and visibility.
          */
-        bool doesWindowReceiveHoverAtPos(const Window targetWindow,
-            const int rootPosX, const int rootPosY);
-
-        /**
-         * This method determines if the mouse is hovered above window
-         * and capable of clicking it in PinButton rect @ point.
-         */
-        bool isWindowClickableInPinButton(const Window stickyWindow,
-            const QRect rect, const QPoint pos);
-
-        /**
-         * Checks if a specific point in global screen coordinates will
-         * land on an active hit-test area of a given window.
-         */
-        bool doesWindowReceiveClickInPinButton(const Window window,
+        bool doesWindowReceiveClickAtPosition(const Window targetWindow,
             const int rootPosX, const int rootPosY);
 
         /**
@@ -261,8 +247,7 @@ class XHelper {
          * land on an active hit-test area of a given window.
          */
         bool doesWindowReceiveClickInControlButton(const Window window,
-            const int rootPosX, const int rootPosY,
-            const Window targetStickyWindow);
+            const int rootPosX, const int rootPosY);
 
         /**
          * Find toplevel for reparented decorations.

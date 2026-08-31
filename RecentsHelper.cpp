@@ -31,7 +31,7 @@ RecentsHelper::getAppRecentsName() {
 
     if (mRecentsName.isEmpty()) {
         QMessageBox::information(NULL, APP_NAME, "Running the maximum "
-            "amount of instances already, ( " + mRecentsHelper->
+            "amount\nof instances already, ( " + mRecentsHelper->
             RECENTS_NAMES[mRecentsHelper->RECENTS_NAMES.size() - 1] +
             " ).");
         cout << endl << XCOLOR_RED << "Running the maximum amount of "
