@@ -4,7 +4,6 @@
 !['StarDustIcon'](https://github.com/markcapella/StarDust/blob/main/StarDust.png)
 !['StarDust'](https://github.com/markcapella/StarDust/blob/main/screenshot.png)
 
-    
 ## Description
     StarDust is an X11 StickyWidgetIII based desktop view.
 

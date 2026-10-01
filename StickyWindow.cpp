@@ -766,6 +766,7 @@ StickyWindow::handleX11EventQueue() {
         // Reset control buttons hover visibility.
         makeAnyHoveredControlButtonVisible(false);
 
+        // Then process event.
         switch (event.type) {
 
             // Detect root window or desktop property changes.
@@ -1018,7 +1019,6 @@ StickyWindow::dragWindowToPoint(const QPoint position) {
         dragPosition.setX(SCREEN_WIDTH - KICK_DISTANCE);
         XWarpPointer(mDisplay, None, DefaultRootWindow(mDisplay),
             0, 0, 0, 0, dragPosition.x(), dragPosition.y());
-
     }
 
     // Check for drag right thru desktops, update position.

@@ -686,8 +686,9 @@ ConfigDialog::acceptConfigDialog() {
     }
 
     // Signal X11 thread we're updated with a settings change that
-    // needs a canvas redraw. We use shorthand "Any changed setting in
-    // PROPERTIES list before LANGUAGE setting" forces canvas redraw.
+    // needs a canvas redraw. We use shorthand "Any changeds to
+    // a setting in the PROPERTIES list before the LANGUAGE setting
+    // appears in the Dialog will force a canvas redraw.
     bool canvasNeedsRedraw = false;
     const int SETTINGS_SIZE = SettingsHelper::PROPERTIES.size();
     for (int index = 0; index < SETTINGS_SIZE; index++) {

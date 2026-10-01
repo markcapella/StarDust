@@ -243,13 +243,6 @@ class XHelper {
             const QRect rect, const QPoint pos);
 
         /**
-         * Checks if a specific point in global screen coordinates will
-         * land on an active hit-test area of a given window.
-         */
-        bool doesWindowReceiveClickInControlButton(const Window window,
-            const int rootPosX, const int rootPosY);
-
-        /**
          * Find toplevel for reparented decorations.
          */
         Window getToplevelOfWindow(const Window window);
