@@ -186,5 +186,4 @@ class Star : public QObject {
         QTimer* mPositionChangeTimer = nullptr;
         QTimer* mColorChangeTimer = nullptr;
 
-        int mDebugCount = 0;
 };

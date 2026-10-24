@@ -22,18 +22,19 @@ StickyWindow::StickyWindow() {
     createAllWindowButtons();
 
     // Instantiate widget canvas.
-    mCanvas = new Canvas(getX11Window(),
-        mRenderPicture, mButtons);
-    updateAutoHideControlsTimer();
+    mCanvas = new Canvas(getX11Window(), mRenderPicture, mButtons);
 
-    // Create autohide timer for control buttons,
-    // then set control buttons visibility.
+    // Create autohide timer for control buttons.
     mAutoHideControlsTimer = make_unique<QTimer>();
     mAutoHideControlsTimer->setSingleShot(true);
+
     QObject::connect(mAutoHideControlsTimer.get(), &QTimer::timeout,
         [this] () {
         setConfigModeOff();
     });
+
+    // Then set control buttons visibility.
+    updateAutoHideControlsTimer();
 }
 
 /**
@@ -610,28 +611,26 @@ StickyWindow::setHoveredControlButtonVisibility(
 void
 StickyWindow::updateAutoHideControlsTimer() {
     lock_guard<recursive_mutex> lock(mButtonsMutLock);
-    const bool CONFIG_MODE = mSettingsHelper->getConfigMode();
 
     // Pin button = 0, controls start @ 1;
-    const int BUTTONS_COUNT = mButtons.size();
-    for (int i = 1; i < BUTTONS_COUNT; i++) {
+    const bool CONFIG_MODE = mSettingsHelper->getConfigMode();
+    for (int i = 1; i < mButtons.size(); i++) {
         mButtons[i]->setVisible(CONFIG_MODE);
     }
     draw();
 
     // If not Config mode, stop autohide timer & done.
     if (!CONFIG_MODE) {
-        if (mAutoHideControlsTimer) {
-            mAutoHideControlsTimer->stop();
-        }
+        mAutoHideControlsTimer->stop();
         return;
     }
 
     // If using autohide Config buttons, start timer.
     if (mSettingsHelper->getBoolSetting(SettingsHelper::
         AUTOHIDE_CONTROLS)) {
-        mAutoHideControlsTimer->start(mSettingsHelper->getIntSetting(
-            SettingsHelper::AUTOHIDE_DELAY) * 1000);
+        const int DELAY_MS = mSettingsHelper->getIntSetting(
+            SettingsHelper::AUTOHIDE_DELAY) * 1000;
+        mAutoHideControlsTimer->start(DELAY_MS);
     }
 }
 

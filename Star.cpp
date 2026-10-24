@@ -277,12 +277,9 @@ Star::changeSize() {
     }
 
     if (mCanvas->isCanvasVisible()) {
-        if (mDebugCount < 99999) {
-            mDebugCount++;
-            erase();
-            randomizeSize();
-            draw();
-        }
+         erase();
+         randomizeSize();
+         draw();
     }
 }
 
