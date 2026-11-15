@@ -265,6 +265,21 @@ class XHelper {
             const QRect windowRect);
 
         /**
+         * Check window _NET_WM_STATE for _NET_WM_STATE_FULLSCREEN.
+         */
+        bool doesWindowStayFullScreen(const Window window);
+
+        /**
+         * Check window _NET_WM_STATE for _NET_WM_STATE_ABOVE.
+         */
+        bool doesWindowStayOnTop(const Window window);
+
+        /**
+         * Check window _NET_WM_STATE for _NET_WM_STATE_BELOW.
+         */
+        bool doesWindowStayOnBottom(const Window window);
+
+        /**
          * Place window in stack order to be on top
          * of all other windows.
          */

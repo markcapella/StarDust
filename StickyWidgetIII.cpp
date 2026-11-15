@@ -40,8 +40,9 @@ XHelper* mXHelper = nullptr;
 RecentsHelper* mRecentsHelper = nullptr;
 SettingsHelper* mSettingsHelper = nullptr;
 TranslationHelper* mTranslationHelper = nullptr;
-
+OpenboxHelper* mOpenboxHelper = nullptr;
 StickyWindow* mStickyWindow = nullptr;
+
 Canvas* mCanvas = nullptr;
 
 // Pngs.
@@ -119,18 +120,24 @@ main(int argc, char** argv) {
     // Png Helpers.
     mSettingsHelper = new SettingsHelper();
     mSettingsHelper->ensureSettingsAreConfigurable();
+
+    mOpenboxHelper = new OpenboxHelper();
+
     mTranslationHelper = new TranslationHelper();
+
     initAppPngImages();
 
     // Run main window.
     mStickyWindow = new StickyWindow();
-    if (mStickyWindow->getX11Window() != None) {
+    if (mStickyWindow->getX11Window()) {
         mStickyWindow->run();
     }
-    delete mStickyWindow;
 
+    delete mStickyWindow;
     delete mTranslationHelper;
+    delete mOpenboxHelper;
     delete mSettingsHelper;
+
     sanitizeGlobals();
     return false;
 }

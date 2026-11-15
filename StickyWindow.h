@@ -65,9 +65,7 @@ class StickyWindow {
         /**
          * This method returns StickyWindows internal x11 window.
          */
-        Window getX11Window() const {
-            return mX11Window;
-        }
+        Window getX11Window() const;
 
     private:
         /**
@@ -101,7 +99,7 @@ class StickyWindow {
          * Set window to stay on bottom or float as normal
          * based on configState.
          */
-        void setWindowStickPosition();
+        void setWindowStickPosition(const Window window);
 
         /**
          * Callback method for Autohide controls timer.

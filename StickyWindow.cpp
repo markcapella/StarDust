@@ -10,8 +10,9 @@ StickyWindow::StickyWindow() {
     if (!mIsVisuallyTransparent) {
         QMessageBox::information(NULL, APP_NAME, "Visual transparency "
             "unavailable with this Desktop, FATAL.");
-        cout << endl << XCOLOR_RED << "Visual transparency unavailable "
-            "with this Desktop, FATAL." << XCOLOR_NORMAL << endl;
+        cout << endl << XCOLOR_RED << APP_NAME << ": Visual "
+            "transparency unavailable with this Desktop, FATAL." <<
+            XCOLOR_NORMAL << endl;
         return;
     }
 
@@ -182,6 +183,10 @@ StickyWindow::resize(const int xPos, const int yPos,
 void
 StickyWindow::run() {
     while (true) {
+
+        // Openbox needs help.
+        mOpenboxHelper->ensureOnTopOrOnBottomForOpenbox(mX11Window);
+
         // Process xEvents, close when requested.
         if (handleX11EventQueue()) {
             mCanvas->uninitCanvas();
@@ -216,6 +221,19 @@ StickyWindow::initVisualTransparency() {
     }
 
     return false;
+}
+
+/**
+ * This method returns StickyWindows internal x11 window.
+ */
+Window
+StickyWindow::getX11Window() const {
+    if (!mX11Window) {
+        cout << XCOLOR_RED << APP_NAME << ": Is referencing mX11Window "
+            "before its been assigned." << XCOLOR_NORMAL << endl;
+    }
+
+    return mX11Window;
 }
 
 /**
@@ -254,9 +272,9 @@ StickyWindow::createX11Window() {
         mVisualInfoStruct.depth, InputOutput, mVisualInfoStruct.visual,
         CWColormap | CWEventMask | CWBorderPixel, &wAttrs);
 
-    if (mX11Window == None) {
-        cout << endl << XCOLOR_RED << "X11 failed to create a window - "
-            "Fatal." << XCOLOR_NORMAL << endl << endl;
+    if (!mX11Window) {
+        cout << endl << XCOLOR_RED << APP_NAME << ": X11 failed to "
+            "create a window - Fatal." << XCOLOR_NORMAL << endl;
         return mX11Window;
     }
 
@@ -308,7 +326,7 @@ StickyWindow::createX11Window() {
     // Set "StickyWindow" type, show window, set config state.
     setStickyWindowType();
     show();
-    setWindowStickPosition();
+    setWindowStickPosition(mX11Window);
 
     // Apply strict configuration to the window. Awesome WM
     // specifically needs this.
@@ -377,19 +395,21 @@ StickyWindow::setStickyWindowType() {
  * based on configState.
  */
 void
-StickyWindow::setWindowStickPosition() {
+StickyWindow::setWindowStickPosition(const Window window) {
     const bool PREFER_ONTOP = mSettingsHelper->getBoolSetting(
         SettingsHelper::ON_TOP_INSTEAD);
 
     // Ensure below is explicitly turned off before enabling above.
     if (PREFER_ONTOP) {
-        mXHelper->makeWindowStayOnBottom(mX11Window, false);
-        mXHelper->makeWindowStayOnTop(mX11Window, true);
+        mXHelper->makeWindowStayOnBottom(window, false);
+        mXHelper->makeWindowStayOnTop(window, true);
     } else {
         // Ensure above is explicitly turned off before enabling below.
-        mXHelper->makeWindowStayOnTop(mX11Window, false);
-        mXHelper->makeWindowStayOnBottom(mX11Window, true);
+        mXHelper->makeWindowStayOnTop(window, false);
+        mXHelper->makeWindowStayOnBottom(window, true);
     }
+
+    mOpenboxHelper->setWindowOnTopOrOnBottomForOpenbox(window);
 }
 
 /**
@@ -513,7 +533,7 @@ StickyWindow::makeAnyHoveredControlButtonVisible(const bool optimize) {
     if (!XQueryPointer(mDisplay, DefaultRootWindow(mDisplay),
         &rootWindow, &window, &rootX, &rootY, &winX, &winY,
         &clickStatus)) {
-        cout << XCOLOR_YELLOW << "Failed to query "
+        cout << XCOLOR_YELLOW << APP_NAME << ": Failed to query "
             "Cursor location." << XCOLOR_NORMAL << endl;
         return;
     }
@@ -970,7 +990,7 @@ StickyWindow::receiveConfigDialogUpdatedEvent(
 
     maybeAdjustWindowOverhang();
     updateAutoHideControlsTimer();
-    setWindowStickPosition();
+    setWindowStickPosition(mX11Window);
     rangeCheckPreferredDesktopSetting();
 
     if (canvasNeedsRedraw) {

@@ -73,8 +73,9 @@ RecentsHelper::lockRecentsProcessInfo() {
     QDir dir = fileInfo.dir();
     if (!dir.exists()) {
         if (!dir.mkpath(".")) {
-            cout << endl << XCOLOR_RED << "Cannot create folder: " <<
-                dir.path().toStdString() << "." << endl;
+            cout << endl << XCOLOR_RED << APP_NAME << ": cannot create "
+                "local folder: " <<  dir.path().toStdString() << "." <<
+                endl;
             return -1;
         }
     }

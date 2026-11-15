@@ -101,6 +101,7 @@ typedef chrono::steady_clock Clock;
 
 #include "SettingsHelper.h"
 #include "RecentsHelper.h"
+#include "OpenboxHelper.h"
 #include "DisplayHelper.h"
 
 #include "WinInfo.h"

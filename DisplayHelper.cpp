@@ -12,7 +12,7 @@ DisplayHelper::DisplayHelper() {
     // Check for display error.
     const char* WAYLAND_DISPLAY = getenv("WAYLAND_DISPLAY");
     if (WAYLAND_DISPLAY && strlen(WAYLAND_DISPLAY) > 0) {
-        cout << XCOLOR_YELLOW << "DisplayHelper: env var "
+        cout << XCOLOR_YELLOW << APP_NAME << ": env var "
             "$WAYLAND_DISPLAY: \"" << WAYLAND_DISPLAY <<
             "\"." << XCOLOR_NORMAL << endl;
         cout << XCOLOR_RED << endl << "DisplayHelper: Wayland "
@@ -24,7 +24,7 @@ DisplayHelper::DisplayHelper() {
     // Check for session error.
     const char* SESSION_TYPE = getenv("XDG_SESSION_TYPE");
     if (SESSION_TYPE && strcmp(SESSION_TYPE, "x11") != 0) {
-        cout << XCOLOR_YELLOW << "DisplayHelper: env var "
+        cout << XCOLOR_YELLOW << APP_NAME << ": env var "
             "$XDG_SESSION_TYPE: \"" << SESSION_TYPE <<
             "\"." << XCOLOR_NORMAL << endl;
         cout << endl << XCOLOR_RED << "DisplayHelper: No X11 "
@@ -36,7 +36,7 @@ DisplayHelper::DisplayHelper() {
     // Check for display access.
     mDisplay = XOpenDisplay(NULL);
     if (mDisplay == nullptr) {
-        cout << XCOLOR_RED << "DisplayHelper: X11 Display "
+        cout << XCOLOR_RED << APP_NAME << ": X11 Display "
             "does not seem to be available (Are you Wayland?) "
             "FATAL." << XCOLOR_NORMAL << endl;
         return;

@@ -18,13 +18,20 @@ class ConfigDialog : public QDialog {
 
     public:
         static inline const int CONFIG_DIALOG_WIDTH = 575;
-        static inline const int CONFIG_DIALOG_HEIGHT = 835;
+        static inline const int CONFIG_DIALOG_HEIGHT = 750;
 
-        static inline const int FORM_TOP_BOTTOM_SPACING = 15;
-        static inline const int FORM_LAYOUT_ROW_SPACING = 8;
+        static inline const int FORM_TOP_BOTTOM_SPACING = 20;
+        static inline const int FORM_LAYOUT_ROW_SPACING = 5;
 
         // Constructor.
         explicit ConfigDialog(QWidget* parent = nullptr);
+
+        /**
+         * We use a fixed height for the form. JA text renders 5 pixels
+         * larger than other languages as an issue. We adjust row height
+         * based on language to always fit the same form height.
+         */
+        void adjustFormRowHeightForLanguage();
 
         /**
          * Translate Settings to desired language for display.

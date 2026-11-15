@@ -14,8 +14,8 @@ set(APP_NAME "StarDust")
 set(APP_DESC "A colorful deep star field that twinkles and")
 set(APP_DESC "${APP_DESC} slowly changes on your desktop.")
 
-set(APP_VERSION "26.10.19")
-set(APP_VERSION_MINOR "01")
+set(APP_VERSION "26.11.15")
+set(APP_VERSION_MINOR "00")
 
 set(APP_AUTHOR "Mark James Capella")
 set(ORG_NAME "skyrmion.inc")
@@ -118,7 +118,7 @@ set(WIDGET_SOURCES
     PinButton.cpp QuitButton.cpp MoveButton.cpp SizeButton.cpp
     ConfigDialog.cpp ColorButton.cpp AboutDialog.cpp ConfigButton.cpp
     SettingsHelper.cpp RecentsHelper.cpp DisplayHelper.cpp XHelper.cpp
-    TranslationHelper.cpp
+    TranslationHelper.cpp OpenboxHelper.cpp
     StickyWindow.cpp StickyWidgetIII.cpp
 )
 

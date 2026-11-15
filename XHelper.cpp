@@ -250,8 +250,8 @@ XHelper::isTransparentToPointer() {
  */
 bool
 XHelper::isDesktopShowing() {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     if (XGetWindowProperty(mDisplay, DefaultRootWindow(
@@ -277,11 +277,11 @@ XHelper::isDesktopShowing() {
  */
 long
 XHelper::getVisibleDesktop() {
-    XFlush(mDisplay);
-
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
+
+    XFlush(mDisplay);
 
     if (XGetWindowProperty(mDisplay, DefaultRootWindow(
         mDisplay), XInternAtom(mDisplay, "_NET_CURRENT_DESKTOP",
@@ -330,11 +330,11 @@ XHelper::setVisibleDesktop(const long desktop) {
  */
 long
 XHelper::getMaximumDesktops() {
-    long result = 1;
-
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
+
+    long result = 1;
 
     const int RESULT = XGetWindowProperty(mDisplay, DefaultRootWindow(
         mDisplay), XInternAtom(mDisplay, "_NET_NUMBER_OF_DESKTOPS",
@@ -355,8 +355,8 @@ XHelper::getMaximumDesktops() {
  */
 vector<Window>
 XHelper::getWindowsStackedList() {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     vector<Window> result;
@@ -533,8 +533,8 @@ XHelper::getWindowSize(const Window window) {
  */
 QSize
 XHelper::getWindowFrameOffset(const Window window) {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     const int CALL_RESULT = XGetWindowProperty(mDisplay, window,
@@ -570,8 +570,8 @@ XHelper::getWindowMapstate(const Window window) {
  */
 pid_t
 XHelper::getWindowPID(const Window window) {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     // Request the property from the X server
@@ -667,22 +667,26 @@ XHelper::getWindowTitleFromPID(const pid_t pid) {
 
 /**
  * This method determines which workspace a
- * window is visible on. result == -1 means all.
+ * window is visible on. RESULT == -1 means all.
  */
 long
 XHelper::getWindowDesktop(const Window window) {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
-    if (XGetWindowProperty(mDisplay, window, XInternAtom(
-        mDisplay, "_NET_WM_DESKTOP", False), 0, 1, False,
-        AnyPropertyType, &type, &format, &nItems,
-        &unusedBytes, &properties) == Success &&
-        type == XA_CARDINAL && properties) {
-        const long result = *(long*) (void*) properties;
-        XFree(properties);
-        return result;
+    if (XGetWindowProperty(mDisplay, window, XInternAtom(mDisplay,
+        "_NET_WM_DESKTOP", False), 0, 1, False, AnyPropertyType, &type,
+        &format, &nItems, &unusedBytes, &properties) == Success) {
+        if (type == XA_CARDINAL && format == 32 &&
+            nItems == 1 && properties) {
+            const unsigned long DESKTOP = *reinterpret_cast
+                <unsigned long*>(properties);
+            const long RESULT = DESKTOP == 0xFFFFFFFFUL ?
+                -1 : static_cast<long>(DESKTOP);
+            XFree(properties);
+            return RESULT;
+        }
     }
 
     XFree(properties);
@@ -695,17 +699,13 @@ XHelper::getWindowDesktop(const Window window) {
 void
 XHelper::setWindowDesktop(const Window window,
     const long workspace) {
-    if (workspace == -1) {
-        XChangeProperty(mDisplay, window, XInternAtom(mDisplay,
-            "_NET_WM_DESKTOP", false), XA_ATOM, 32,
-            PropModeReplace, NULL, 0);
-        XFlush(mDisplay);
-        return;
-    }
 
+    const unsigned long WORKSPACE = workspace == -1 ?
+        0xFFFFFFFFUL : workspace;
     XChangeProperty(mDisplay, window, XInternAtom(mDisplay,
-        "_NET_WM_DESKTOP", false), XA_CARDINAL, 32,
-        PropModeReplace, (unsigned char*) &workspace, 1);
+        "_NET_WM_DESKTOP", false), XA_CARDINAL, 32, PropModeReplace,
+        reinterpret_cast<const unsigned char*>(&WORKSPACE), 1);
+
     XFlush(mDisplay);
 }
 
@@ -733,8 +733,8 @@ XHelper::isWindowHidden(const Window window) {
  */
 bool
 XHelper::isWindowHiddenByNetWMState(const Window window) {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     if (XGetWindowProperty(mDisplay, window, XInternAtom(
@@ -765,8 +765,8 @@ XHelper::isWindowHiddenByNetWMState(const Window window) {
  */
 bool
 XHelper::isWindowHiddenByWMState(const Window window) {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     if (XGetWindowProperty(mDisplay, window, XInternAtom(
@@ -788,8 +788,8 @@ XHelper::isWindowHiddenByWMState(const Window window) {
  */
 bool
 XHelper::isWindowSticky(const Window window) {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     if (XGetWindowProperty(mDisplay, window, XInternAtom(
@@ -819,8 +819,8 @@ XHelper::isWindowSticky(const Window window) {
  */
 bool
 XHelper::isWindowDock(const Window window) {
-    Atom type; int format;
-    unsigned long nItems, unusedBytes;
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
     unsigned char* properties = nullptr;
 
     if (XGetWindowProperty(mDisplay, window, XInternAtom(
@@ -1158,6 +1158,99 @@ XHelper::getEffectiveRect(const Window topWindow,
         XFree(topWindowProperties);
         return effectiveRect;
     }
+}
+
+/**
+ * Check window _NET_WM_STATE for _NET_WM_STATE_FULLSCREEN.
+ */
+bool
+XHelper::doesWindowStayFullScreen(const Window window) {
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
+    unsigned char* properties = nullptr;
+
+    if (XGetWindowProperty(mDisplay, window, XInternAtom(
+        mDisplay, "_NET_WM_STATE", False), 0, (~0L), False,
+        AnyPropertyType, &type, &format, &nItems,
+        &unusedBytes, &properties) == Success &&
+        type == XA_ATOM && format == 32 && properties) {
+        for (unsigned long i = 0; i < nItems; i++) {
+            char* nameString = XGetAtomName(mDisplay,
+                ((Atom*) (void*) properties) [i]);
+            if (strcmp("_NET_WM_STATE_FULLSCREEN",
+                nameString) == 0) {
+                XFree(nameString);
+                XFree(properties);
+                return true;
+            }
+            XFree(nameString);
+        }
+    }
+    XFree(properties);
+
+    return false;
+}
+
+/**
+ * Check window _NET_WM_STATE for _NET_WM_STATE_ABOVE.
+ */
+bool
+XHelper::doesWindowStayOnTop(const Window window) {
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
+    unsigned char* properties = nullptr;
+
+    if (XGetWindowProperty(mDisplay, window, XInternAtom(
+        mDisplay, "_NET_WM_STATE", False), 0, (~0L), False,
+        AnyPropertyType, &type, &format, &nItems,
+        &unusedBytes, &properties) == Success &&
+        type == XA_ATOM && format == 32 && properties) {
+        for (unsigned long i = 0; i < nItems; i++) {
+            char* nameString = XGetAtomName(mDisplay,
+                ((Atom*) (void*) properties) [i]);
+            if (strcmp("_NET_WM_STATE_ABOVE",
+                nameString) == 0) {
+                XFree(nameString);
+                XFree(properties);
+                return true;
+            }
+            XFree(nameString);
+        }
+    }
+    XFree(properties);
+
+    return false;
+}
+
+/**
+ * Check window _NET_WM_STATE for _NET_WM_STATE_BELOW.
+ */
+bool
+XHelper::doesWindowStayOnBottom(const Window window) {
+    Atom type = 0; int format = 0;
+    unsigned long nItems = 0, unusedBytes = 0;
+    unsigned char* properties = nullptr;
+
+    if (XGetWindowProperty(mDisplay, window, XInternAtom(
+        mDisplay, "_NET_WM_STATE", False), 0, (~0L), False,
+        AnyPropertyType, &type, &format, &nItems,
+        &unusedBytes, &properties) == Success &&
+        type == XA_ATOM && format == 32 && properties) {
+        for (unsigned long i = 0; i < nItems; i++) {
+            char* nameString = XGetAtomName(mDisplay,
+                ((Atom*) (void*) properties) [i]);
+            if (strcmp("_NET_WM_STATE_BELOW",
+                nameString) == 0) {
+                XFree(nameString);
+                XFree(properties);
+                return true;
+            }
+            XFree(nameString);
+        }
+    }
+    XFree(properties);
+
+    return false;
 }
 
 /**

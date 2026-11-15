@@ -23,7 +23,7 @@ AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
     appTitleFont.setItalic(true);
     appTitleLine->setFont(appTitleFont);
     QPalette appTitlePalette = appTitleLine->palette();
-    appTitlePalette.setColor(QPalette::WindowText, QColor("#1ed760"));
+    appTitlePalette.setColor(QPalette::WindowText, QColor("#33b7de"));
     appTitleLine->setPalette(appTitlePalette);
     mainLayout->addWidget(appTitleLine);
 

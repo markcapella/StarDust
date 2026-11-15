@@ -23,12 +23,24 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle(QString(TITLE));
 
     // Set the window attributes, create controls & center.
+    // Build form.
+    mFormLayout = new QFormLayout();
+    mFormLayout->setContentsMargins(0, FORM_TOP_BOTTOM_SPACING,
+        0, FORM_TOP_BOTTOM_SPACING);
+    mFormLayout->setLabelAlignment(Qt::AlignRight);
+    mFormLayout->setFormAlignment(Qt::AlignLeft);
+
     createConfigDialog();
-    mFormLayout->setFormAlignment(Qt::AlignCenter);
+
+    // Adjust row height for enlarged Ja char set.
+    adjustFormRowHeightForLanguage();
 
     // Add the formlayout to a formcontainer.
     QWidget* formContainer = new QWidget();
-    formContainer->setLayout(mFormLayout);
+    QHBoxLayout* containerLayout = new QHBoxLayout(formContainer);
+    containerLayout->addStretch();
+    containerLayout->addLayout(mFormLayout);
+    containerLayout->addStretch();
 
     // Add the formcontainer to a scrollarea.
     QScrollArea* scrollArea = new QScrollArea();
@@ -77,6 +89,26 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
 
     // Init settings change list, size / value.
     mSettingChanges.fill(false, SettingsHelper::PROPERTIES.size());
+}
+
+/**
+ * We use a fixed height for the form. JA text renders 5 pixels
+ * larger than other languages as an issue. We adjust row height
+ * based on language to always fit the same form height.
+ */
+void
+ConfigDialog::adjustFormRowHeightForLanguage() {
+
+    const QString LANG = mSettingsHelper->getStringSetting(
+        SettingsHelper::APP_LANGUAGE);
+    const int FORM_LAYOUT_SIZE = mFormLayout->rowCount();
+
+    const int BASE_ROW_SIZE = 3;
+    const int FORM_LAYOUT_ROW_SPACING_ADJUSTED = (LANG == "ja") ?
+        FORM_LAYOUT_ROW_SPACING : FORM_LAYOUT_ROW_SPACING +
+            (BASE_ROW_SIZE * FORM_LAYOUT_SIZE) / (FORM_LAYOUT_SIZE - 1);
+
+    mFormLayout->setVerticalSpacing(FORM_LAYOUT_ROW_SPACING_ADJUSTED);
 }
 
 /**
@@ -129,6 +161,9 @@ ConfigDialog::translateConfigDialog() {
     mOkButton->clearFocus();
     mApplyButton->clearFocus();
     mCancelButton->clearFocus();
+
+    // Adjust row height for enlarged Ja char set.
+    adjustFormRowHeightForLanguage();
 }
 
 /**
@@ -307,11 +342,6 @@ ConfigDialog::updateConfigDialog() {
  */
 void
 ConfigDialog::createConfigDialog() {
-    // Build form.
-    mFormLayout = new QFormLayout();
-    mFormLayout->setContentsMargins(0, FORM_TOP_BOTTOM_SPACING,
-        0, FORM_TOP_BOTTOM_SPACING);
-    mFormLayout->setVerticalSpacing(FORM_LAYOUT_ROW_SPACING);
 
     const int SETTINGS_SIZE = SettingsHelper::PROPERTIES.size();
     for (int i = 0; i < SETTINGS_SIZE; i++) {
